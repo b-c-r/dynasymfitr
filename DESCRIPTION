@@ -16,8 +16,7 @@ Description: This package will host functions to estimate the strength of
     nutrient uptake models while correcting for inferring processes such
     as resource growth or consumer death that would otherwise harm precise
     parameter estimation.
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
