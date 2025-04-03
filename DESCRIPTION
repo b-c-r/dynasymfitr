@@ -1,5 +1,5 @@
 Package: dynafit
-Title: Fitting dynamic ecological population models
+Title: Fitting dynamic ecological population models to laboratory data
 Version: 0.0.0.9000
 Authors@R: 
     person("Björn C.", "Rall", , "bjoern.rall@uni-konstanz.de", role = c("aut", "cre"),
