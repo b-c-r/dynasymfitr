@@ -1,0 +1,124 @@
+---
+title: "dynafit: Fitting dynamic ecological population models to laboratory data"
+bibliography: references/dynafit.bib
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+## Overview
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of `dynafit` is to provide a set of functions to analyze laboratory species interaction experiments in a way that the parameter estimates can be seamlessly integrated into theoretical/computational eco-evo projects. `dynafit` will be developed within the DFG-funded research unit 5726, [DynaSym](https://www.dynasym.uni-konstanz.de/), but is not limited to it.
+
+Estimating density-dependent species interactions is not trivial. The possibly most prominent example is the density-dependent feeding rate, also known as functional response [@Holling1959CharacteristicsSimpleTypes]. Feeding is a temporal process, which requires that the functional response model be modeled as a differential equation describing the decay of the resource over time [@RosenbaumRall2018FittingFunctionalResponses]. While a so-called analytical solution exists for the classical hyperbolic type II functional response [@Royama1971ComparativeStudyModels; @Rogers1972RandomSearchInsect; @Bolker2008EcologicalModelsData], the differential equations of other functional response types need to be solved numerically while being fitted to data [@RosenbaumRall2018FittingFunctionalResponses] to avoid biases in the parameter evaluation.
+In addition to the above-mentioned problem, if using small organisms such as algae as resources and ciliates as consumers, even in short-term experiments these critters may grow or decline in population size (i.e., the numerical response) due to death and reproduction. This issue would add even more bias to the estimated parameters. However, by simulating the dynamics of resources and consumers explicitly, these biases can be corrected [@RosenbaumRall2018FittingFunctionalResponses].
+[DynaSym](https://www.dynasym.uni-konstanz.de/) researchers will predominantly work in aquatic planktonic environments to detect the strength and sign of symbiotic species interactions [@BecksEtAl2025EmergentFeedbackSymbiosis]. Therefore, we will not only add models describing species interactions as mentioned above, but also widely used nutrient uptake models [@Tilman1977ResourceCompetitionPlankton; @HuismanWeissing1999BiodiversityPlanktonSpecies; @Brose2008ComplexFoodWebs; @ZhangBecks2024MechanisticRulesSpecies].
+
+Please note that this package is under development, and we will also add more information to the README in the future.
+
+## Installation
+
+You can install the development version of dynafit from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("b-c-r/dynafit")
+```
+
+## Examples
+
+### Modelling resource decay over time
+
+First, load the package:
+
+```{r example, message=FALSE, warning=FALSE}
+library(dynafit)
+```
+
+Next, compile the ode solver using `odin`:
+
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+compile_gen_fr()
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+compile_gen_fr()
+```
+
+Assign the model parameter values for the type II functional response model:
+
+```{r}
+gen_fr_model_assigned_II <- gen_fr_model$new(
+ n_initial = 5, # initial prey number (or density)
+ f_max = 18,    # maximum feeding rate
+ n_half = 3,    # half saturation density
+ q = 0,         # shape parameter (q = 0 is a type II functional response)
+ p = 1          # predator number (or density, fixed)
+)
+```
+
+Simulate the decay of prey:
+
+```{r}
+out_type_II <- gen_fr_model_assigned_II$run(seq(0,1,length.out=1000))
+```
+
+Let us repeat this exercise with a type III functional response:
+
+```{r}
+gen_fr_model_assigned_III <- gen_fr_model$new(
+ n_initial = 5, # initial prey number (or density)
+ f_max = 18,    # maximum feeding rate
+ n_half = 3,    # half saturation density
+ q = 1,         # shape parameter (q = 1 is a type II functional response)
+ p = 1          # predator number (or density, fixed)
+)
+```
+
+Simulate the decay of prey 
+
+```{r}
+out_type_III <- gen_fr_model_assigned_III$run(seq(0,1,length.out=1000))
+```
+
+The time series look like:
+
+```{r resource_decay, echo = FALSE}
+# plot results
+plot(
+ out_type_II[,1],
+ out_type_II[,2],
+ type = "l",
+ ylab = "resource density",
+ xlab = "time, e.g. one day"
+)
+lines(
+ out_type_III[,1],
+ out_type_III[,2],
+ lty = 2
+)
+legend(
+  "topright",
+  legend = c("type II", c("type III")),
+  lty = c(1,2)
+)
+```
+
+
+## Funding Information
+
+-   Björn C. Rall gratefully acknowledges the funding by the **German Science Foundation (DFG) to the Research Unit DynaSym (FOR 5064)**.
+
+## References
