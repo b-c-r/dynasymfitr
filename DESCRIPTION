@@ -1,0 +1,23 @@
+Package: dynafit
+Title: Fitting dynamic ecological population models
+Version: 0.0.0.9000
+Authors@R: 
+    person("Björn C.", "Rall", , "bjoern.rall@uni-konstanz.de", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-3191-8389"))
+Description: This package will host functions to estimate the strength of
+    density-dependent symbiotic species interactions as part of the
+    DFG-funded research unit 5726, DynaSym
+    (https://www.dynasym.uni-konstanz.de/). The research unit aims at
+    combining laboratory experiments and ecological theory, which requires
+    sophisticated statistical methods, including the combination of
+    numerical simulations of population models with maximum likelihood
+    estimators, or Bayesian MCMC parameter estimation. The package will
+    include functions to fit, e.g., several functional response models or
+    nutrient uptake models while correcting for inferring processes such
+    as resource growth or consumer death that would otherwise harm precise
+    parameter estimation.
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
