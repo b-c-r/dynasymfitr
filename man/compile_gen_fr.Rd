@@ -22,23 +22,18 @@ resource density, N, and the parameters of the model are the maximum
 feeding rate, F_max, the half saturation density, N_half, and the shape
 parameter q (Williams and Martinez 2004, Vucic-Pestic et al. 2010):
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{    F = F_max * N^(1+q) / (N_half^(1+q) + N^(1+q)).
+\if{html}{\out{<div class="sourceCode">}}\preformatted{F = F_max * N^(1+q) / (N_half^(1+q) + N^(1+q)).
 
 The resulting ODE, describing the decay of the resource over time, dN/dt,
 is:
 
-    dN/dt = -F_max * N^(1+q) / (N_half^(1+q) + N^(1+q)).
+dN/dt = -F_max * N^(1+q) / (N_half^(1+q) + N^(1+q)).
 
 A numerical simulation is required as there is no analytical solution for
 this problem (Rosenbaum and Rall 2018). We use the R package “odin”
 (FitzJohn 2024) to create a fast simulation model in C. This model can be
 used to estimate the exact shape of the functional response or test if a
 functional response is type II or type III (Rosenbaum and Rall 2018).
-
-Required packages and their dependencies to be installed:
-  - `odin` (FitzJohn and Jombart 2024)
-Required packages to be attached:
-  - None
 }\if{html}{\out{</div>}}
 }
 \examples{
