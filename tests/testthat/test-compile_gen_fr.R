@@ -1,4 +1,4 @@
-test_that("multiplication works", {
+test_that("compile_gen_fr works", {
   expect_equal(
     {
       compile_gen_fr()
