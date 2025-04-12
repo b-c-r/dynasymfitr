@@ -4,4 +4,5 @@
 ^README\.Rmd$
 ^references$
 ^references/dynafit\.bib$
+^Rdev$
 ^data-raw$
