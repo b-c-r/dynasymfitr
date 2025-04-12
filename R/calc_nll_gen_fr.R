@@ -59,9 +59,8 @@
 #'     non-permanent food-web dynamics. Eur Phys J B 38, 297-303.
 #'     https://doi.org10.1140/epjb/e2004-00122-1
 #'
-#' @seealso [compile_gen_fr()]
-#'
-#' @include compile_gen_fr.R
+#' @useDynLib dynafit
+#' @importFrom odin odin
 #' @importFrom stats dbinom
 #'
 #' @param n_eaten integer (or float); the prey items that were eaten throughout
@@ -92,8 +91,6 @@
 #' @export
 #'
 #' @examples
-#'
-#' compile_gen_fr()
 #'
 #' fr_data <- data_vucic_pestic_et_al_2010_j_anim_ecol
 #'
@@ -150,7 +147,7 @@ calc_nll_gen_fr <- function(
       t_length = t_length
     )
 
-    lls <- dbinom(
+    lls <- stats::dbinom(
       x = n_eaten,
       size = n_initial,
       prob = eaten_simulated$n_eaten/n_initial,

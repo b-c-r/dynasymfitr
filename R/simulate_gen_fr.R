@@ -16,11 +16,9 @@
 #' @references Real (1979) Ecological determinants of functional response.
 #'     Ecology 60, 481-485. https://doi.org/10.2307/1936067
 #'
-#' @seealso [compile_gen_fr()]
-#'
-#' @include compile_gen_fr.R
-#'
+#' @useDynLib dynafit
 #' @import foreach
+#' @importFrom odin odin
 #'
 #' @param n_initial integer or float; a vector of initial prey densities.
 #' @param p integer or float; a single value of a fixed predator density. The
@@ -71,8 +69,6 @@ simulate_gen_fr <- function(
     t_length = 1000
 ){
 
-  # compile the ode solver
-  compile_gen_fr()
   i <- NULL
 
   # foreach loop across all initial prey densities:

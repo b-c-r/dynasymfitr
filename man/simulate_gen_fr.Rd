@@ -80,6 +80,3 @@ Real (1977) The kinetics of functional response. Am Nat 111, 289-
 Real (1979) Ecological determinants of functional response.
 Ecology 60, 481-485. https://doi.org/10.2307/1936067
 }
-\seealso{
-\code{\link[=compile_gen_fr]{compile_gen_fr()}}
-}

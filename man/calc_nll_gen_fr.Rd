@@ -98,8 +98,6 @@ crash the fitting algorithm.
 }
 \examples{
 
-compile_gen_fr()
-
 fr_data <- data_vucic_pestic_et_al_2010_j_anim_ecol
 
 fit <- bbmle::mle2(
@@ -155,7 +153,4 @@ https://doi.org/10.1111/j.1365-2656.2009.01622.x
 Williams and Martinez (2004) Stabilization of chaotic and
 non-permanent food-web dynamics. Eur Phys J B 38, 297-303.
 https://doi.org10.1140/epjb/e2004-00122-1
-}
-\seealso{
-\code{\link[=compile_gen_fr]{compile_gen_fr()}}
 }
