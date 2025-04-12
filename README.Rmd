@@ -95,9 +95,9 @@ out <- simulate_gen_fr(
 )
 ```
 
-The time series look like:
+Create the regression plot:
 
-```{r fr_example, echo = FALSE}
+```{r fr_example}
 # plot results
 plot(
  fr_data$n_initial,

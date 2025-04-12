@@ -129,7 +129,21 @@ out <- simulate_gen_fr(
 )
 ```
 
-The time series look like:
+Create the regression plot:
+
+``` r
+# plot results
+plot(
+ fr_data$n_initial,
+ fr_data$n_eaten,
+ ylab = "number of prey eaten",
+ xlab = "initial prey density"
+)
+lines(
+ out[,1],
+ out[,2]
+)
+```
 
 <img src="man/figures/README-fr_example-1.png" width="100%" />
 
