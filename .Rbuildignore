@@ -4,3 +4,4 @@
 ^README\.Rmd$
 ^references$
 ^references/dynafit\.bib$
+^data-raw$
