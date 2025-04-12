@@ -34,3 +34,6 @@ Collate:
     'calc_nll_gen_fr.R'
     'data_vucic_pestic_et_al_2010_j_anim_ecol.R'
     'simulate_gen_fr.R'
+Depends: 
+    R (>= 3.5)
+LazyData: true
