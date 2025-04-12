@@ -73,6 +73,7 @@ simulate_gen_fr <- function(
 
   # compile the ode solver
   compile_gen_fr()
+  i <- NULL
 
   # foreach loop across all initial prey densities:
   n_eaten <- foreach::foreach(
@@ -102,6 +103,8 @@ simulate_gen_fr <- function(
     # calculate the number of prey eaten (start - final prey density):
     n_initial[i] - remaining_prey
   }
+
+  rm(i)
 
   # return the data frame
   data.frame(

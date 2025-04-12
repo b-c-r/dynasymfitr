@@ -62,6 +62,7 @@
 #' @seealso [compile_gen_fr()]
 #'
 #' @include compile_gen_fr.R
+#' @importFrom stats dbinom
 #'
 #' @param n_eaten integer (or float); the prey items that were eaten throughout
 #'     the experimental trial. A vector.
