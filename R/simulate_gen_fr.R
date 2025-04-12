@@ -43,8 +43,9 @@
 #'
 #' # simulate the functional response:
 #' out <- simulate_gen_fr(
-#'  n_initial = 1:100,    # vector of initial prey densities
-#'  p = 1,                # fixed predator density
+#'  n_initial = 0:100,    # vector of initial prey densities
+#'  p = rep(1, 101),      # fixed predator density
+#'  t_end = rep(1, 101),  # fixed end time
 #'  f_max = 10,           # maximum feeding rate
 #'  n_half = 25,          # half saturation density
 #'  q = 1                 # shape parameter (1 = s-shaped)
@@ -60,13 +61,13 @@
 
 simulate_gen_fr <- function(
     n_initial,
-    p = 1,
+    p,
+    t_end,
+    t_start = 0,
+    t_length = 1000,
     f_max,
     n_half,
-    q,
-    t_start = 0,
-    t_end = 1,
-    t_length = 1000
+    q
 ){
 
   i <- NULL
@@ -80,16 +81,16 @@ simulate_gen_fr <- function(
     # assign values to model parameters
     gen_fr_model_assigned <- gen_fr_model$new(
       n_initial = n_initial[i],
+      p = p[i],
       f_max = f_max,
       n_half = n_half,
-      q = q,
-      p = p
+      q = q
     )
 
     # set time steps to be computed
     tt <- seq(
       t_start,
-      t_end,
+      t_end[i],
       length.out = t_length
     )
 

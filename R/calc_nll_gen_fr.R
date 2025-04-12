@@ -63,11 +63,12 @@
 #' @importFrom odin odin
 #' @importFrom stats dbinom
 #'
-#' @param n_eaten integer (or float); the prey items that were eaten throughout
+#' @param n_eaten integer; the prey items that were eaten throughout
 #'     the experimental trial. A vector.
-#' @param n_initial integer (or float); the initial prey density. A vector of
+#' @param n_initial integer; the initial prey density. A vector of
 #'     the same length as n_eaten.
-#' @param p integer or float, the predator density. A single value
+#' @param p  integer; the predator density. A vector of
+#'     the same length as n_eaten.
 #' @param f_max_log10 float; the log10 maximum feeding rate.
 #' @param n_half_log10 float; the log10 half saturation density.
 #' @param q float; shape parameter, a single value. A strict type II functional
@@ -101,33 +102,28 @@
 #'     n_half_log10 = log10(mean(fr_data$n_initial)),
 #'     q = 0.2
 #'   ),
-#'   fixed = list(
-#'     t_end = 1,
-#'     p = 1
-#'   ),
 #'   data = list(
 #'     n_eaten = fr_data$n_eaten,
-#'     n_initial = fr_data$n_initial
+#'     n_initial = fr_data$n_initial,
+#'     p = rep(1, nrow(fr_data)),
+#'     t_end = rep(1, nrow(fr_data))
 #'   ),
 #'   control = list(reltol = 1e-12, maxit = 1000)
 #' )
-#' # Ignore the warnings. mle2 tries extreme values odin can't handle
-#' # This does not affect the final result!
 #'
 #' bbmle::summary(fit)
-#' bbmle::AIC(fit)
 #'
 
 calc_nll_gen_fr <- function(
     n_eaten,
     n_initial,
-    p = 1,
+    p,
+    t_end,
+    t_start = 0,
+    t_length = 1000,
     f_max_log10,
     n_half_log10,
     q,
-    t_start = 0,
-    t_end = 1,
-    t_length = 1000,
     penalty = 1000,
     q_low = 0,
     q_up = 1

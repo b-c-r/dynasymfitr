@@ -7,26 +7,37 @@
 calc_nll_gen_fr(
   n_eaten,
   n_initial,
-  p = 1,
+  p,
+  t_end,
+  t_start = 0,
+  t_length = 1000,
   f_max_log10,
   n_half_log10,
   q,
-  t_start = 0,
-  t_end = 1,
-  t_length = 1000,
   penalty = 1000,
   q_low = 0,
   q_up = 1
 )
 }
 \arguments{
-\item{n_eaten}{integer (or float); the prey items that were eaten throughout
+\item{n_eaten}{integer; the prey items that were eaten throughout
 the experimental trial. A vector.}
 
-\item{n_initial}{integer (or float); the initial prey density. A vector of
+\item{n_initial}{integer; the initial prey density. A vector of
 the same length as n_eaten.}
 
-\item{p}{integer or float, the predator density. A single value}
+\item{p}{integer; the predator density. A vector of
+the same length as n_eaten.}
+
+\item{t_end}{integer or float; the time were the feeding ends. A single
+value; default = 1 (e.g. 1 day).}
+
+\item{t_start}{integer or float; the time were the feeding starts. A single
+value; default = 0.}
+
+\item{t_length}{integer or float; the number of time steps that should be
+generated. The more time steps, the more precise the simulation. A single
+value; default = 100.}
 
 \item{f_max_log10}{float; the log10 maximum feeding rate.}
 
@@ -34,16 +45,6 @@ the same length as n_eaten.}
 
 \item{q}{float; shape parameter, a single value. A strict type II functional
 has q = 0, a strict type III functional response has q = 1.}
-
-\item{t_start}{integer or float; the time were the feeding starts. A single
-value; default = 0.}
-
-\item{t_end}{integer or float; the time were the feeding ends. A single
-value; default = 1 (e.g. 1 day).}
-
-\item{t_length}{integer or float; the number of time steps that should be
-generated. The more time steps, the more precise the simulation. A single
-value; default = 100.}
 
 \item{penalty}{a penalty that is added to the nll if the value of q is below
 q_low or above q_up. The default= 1000. Equation:
@@ -107,21 +108,16 @@ fit <- bbmle::mle2(
     n_half_log10 = log10(mean(fr_data$n_initial)),
     q = 0.2
   ),
-  fixed = list(
-    t_end = 1,
-    p = 1
-  ),
   data = list(
     n_eaten = fr_data$n_eaten,
-    n_initial = fr_data$n_initial
+    n_initial = fr_data$n_initial,
+    p = rep(1, nrow(fr_data)),
+    t_end = rep(1, nrow(fr_data))
   ),
   control = list(reltol = 1e-12, maxit = 1000)
 )
-# Ignore the warnings. mle2 tries extreme values odin can't handle
-# This does not affect the final result!
 
 bbmle::summary(fit)
-bbmle::AIC(fit)
 
 }
 \references{

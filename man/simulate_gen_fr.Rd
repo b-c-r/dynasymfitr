@@ -6,13 +6,13 @@
 \usage{
 simulate_gen_fr(
   n_initial,
-  p = 1,
+  p,
+  t_end,
+  t_start = 0,
+  t_length = 1000,
   f_max,
   n_half,
-  q,
-  t_start = 0,
-  t_end = 1,
-  t_length = 1000
+  q
 )
 }
 \arguments{
@@ -21,22 +21,22 @@ simulate_gen_fr(
 \item{p}{integer or float; a single value of a fixed predator density. The
 default value is 1.}
 
+\item{t_end}{integer or float; the time were the feeding ends. A single
+value; default = 1 (e.g. 1 day).}
+
+\item{t_start}{integer or float; the time were the feeding starts. A single
+value; default = 0.}
+
+\item{t_length}{integer or float; the number of time steps that should be
+generated. The more time steps, the more precise the simulation. A single
+value; default = 1000.}
+
 \item{f_max}{float; maximum feeding rate, a single value.}
 
 \item{n_half}{float; half saturation density, a single value.}
 
 \item{q}{float; shape parameter, a single value. A strict type II functional
 has q = 0, a strict type III functional response has q = 1.}
-
-\item{t_start}{integer or float; the time were the feeding starts. A single
-value; default = 0.}
-
-\item{t_end}{integer or float; the time were the feeding ends. A single
-value; default = 1 (e.g. 1 day).}
-
-\item{t_length}{integer or float; the number of time steps that should be
-generated. The more time steps, the more precise the simulation. A single
-value; default = 1000.}
 }
 \value{
 Returns a data frame with n_initial and the according n_eaten.
@@ -54,8 +54,9 @@ floating numbers are returned by \code{simulate_gen_fr}.
 
 # simulate the functional response:
 out <- simulate_gen_fr(
- n_initial = 1:100,    # vector of initial prey densities
- p = 1,                # fixed predator density
+ n_initial = 0:100,    # vector of initial prey densities
+ p = rep(1, 101),      # fixed predator density
+ t_end = rep(1, 101),  # fixed end time
  f_max = 10,           # maximum feeding rate
  n_half = 25,          # half saturation density
  q = 1                 # shape parameter (1 = s-shaped)
