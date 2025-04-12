@@ -57,58 +57,81 @@ pak::pak("b-c-r/dynafit")
 
 ### Modelling resource decay over time
 
-First, load the package:
+First, load the `dynafit` and the `bbmle` package:
 
 ``` r
-library(dynafit)
+library("dynafit")
+# install.packages("bbmle")
+library("bbmle")
 ```
 
-Next, compile the ode solver using `odin`:
+Transfer the data to an object with a shorter name:
 
 ``` r
-compile_gen_fr()
+fr_data <- data_vucic_pestic_et_al_2010_j_anim_ecol
 ```
 
-Assign the model parameter values for the type II functional response
-model:
+Fit the model to the data:
 
 ``` r
-gen_fr_model_assigned_II <- gen_fr_model$new(
- n_initial = 5, # initial prey number (or density)
- f_max = 18,    # maximum feeding rate
- n_half = 3,    # half saturation density
- q = 0,         # shape parameter (q = 0 is a type II functional response)
- p = 1          # predator number (or density, fixed)
+fit <- bbmle::mle2(
+  minuslogl = calc_nll_gen_fr,
+  start = list(
+    f_max_log10  = log10(max(fr_data$n_eaten)),
+    n_half_log10 = log10(mean(fr_data$n_initial)),
+    q = 0.2
+  ),
+  
+  data = list(
+    n_eaten = fr_data$n_eaten,
+    n_initial = fr_data$n_initial,
+    p = rep(1, nrow(fr_data)),
+    t_end = rep(1, nrow(fr_data))
+  ),
+  control = list(reltol = 1e-12, maxit = 1000)
 )
 ```
 
-Simulate the decay of prey:
+See the summary table:
 
 ``` r
-out_type_II <- gen_fr_model_assigned_II$run(seq(0,1,length.out=1000))
+bbmle::summary(fit)
+#> Maximum likelihood estimation
+#> 
+#> Call:
+#> bbmle::mle2(minuslogl = calc_nll_gen_fr, start = list(f_max_log10 = log10(max(fr_data$n_eaten)), 
+#>     n_half_log10 = log10(mean(fr_data$n_initial)), q = 0.2), 
+#>     data = list(n_eaten = fr_data$n_eaten, n_initial = fr_data$n_initial, 
+#>         p = rep(1, nrow(fr_data)), t_end = rep(1, nrow(fr_data))), 
+#>     control = list(reltol = 1e-12, maxit = 1000))
+#> 
+#> Coefficients:
+#>              Estimate Std. Error z value     Pr(z)    
+#> f_max_log10  1.399850   0.038288 36.5607 < 2.2e-16 ***
+#> n_half_log10 1.471545   0.083398 17.6449 < 2.2e-16 ***
+#> q            0.597590   0.196908  3.0349  0.002406 ** 
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#> 
+#> -2 log L: 307.7785
 ```
 
-Let us repeat this exercise with a type III functional response:
+Simulate the best fit:
 
 ``` r
-gen_fr_model_assigned_III <- gen_fr_model$new(
- n_initial = 5, # initial prey number (or density)
- f_max = 18,    # maximum feeding rate
- n_half = 3,    # half saturation density
- q = 1,         # shape parameter (q = 1 is a type II functional response)
- p = 1          # predator number (or density, fixed)
+out <- simulate_gen_fr(
+ n_initial = 0:1000,                 # vector of initial prey densities
+ p = rep(1,1001),                    # fixed predator density
+ t_end = rep(1,1001),                # fixed end time of the experiment
+ f_max = 10^bbmle::coef(fit)[[1]],   # maximum feeding rate
+ n_half = 10^bbmle::coef(fit)[[2]],  # half saturation density
+ q = bbmle::coef(fit)[[3]]           # shape parameter (1 = s-shaped)
 )
-```
-
-Simulate the decay of prey
-
-``` r
-out_type_III <- gen_fr_model_assigned_III$run(seq(0,1,length.out=1000))
 ```
 
 The time series look like:
 
-<img src="man/figures/README-resource_decay-1.png" width="100%" />
+<img src="man/figures/README-fr_example-1.png" width="100%" />
 
 ## Funding Information
 
