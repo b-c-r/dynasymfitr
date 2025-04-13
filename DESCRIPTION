@@ -22,6 +22,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
     foreach,
+    lhs,
     odin
 Suggests:
     bbmle,
@@ -34,6 +35,7 @@ Collate:
     'data_vucic_pestic_et_al_2010_j_anim_ecol.R'
     'odin.R'
     'simulate_gen_fr.R'
+    'scan_gen_fr_parms.R'
 Depends: 
     R (>= 3.5)
 LazyData: true
