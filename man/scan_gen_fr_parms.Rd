@@ -81,7 +81,7 @@ lowest nll value) from these samples. To reduce the number of required
 samples by keeping the variance of parameter values as wide as possible,
 it is recommended to use Latin hypercube sampling. \code{scan_gen_fr_parms}
 requires the lhs package (Carnell 2024). See also the description of
-\code{calc_nll_gen_fr} for further information.
+\code{calc_gen_fr_nll} for further information.
 }
 \examples{
 

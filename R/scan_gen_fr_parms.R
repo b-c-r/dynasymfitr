@@ -15,7 +15,7 @@
 #'     samples by keeping the variance of parameter values as wide as possible,
 #'     it is recommended to use Latin hypercube sampling. `scan_gen_fr_parms`
 #'     requires the lhs package (Carnell 2024). See also the description of
-#'     `calc_nll_gen_fr` for further information.
+#'     `calc_gen_fr_nll` for further information.
 #'
 #' @references Bolker (2008) Ecological models and data in R, Princeton
 #'     University Press, Princeton, New Jersey.
@@ -28,7 +28,7 @@
 #' @useDynLib dynafit
 #'
 #' @include simulate_gen_fr.R
-#' @include calc_nll_gen_fr.R
+#' @include calc_gen_fr_nll.R
 #'
 #' @import foreach
 #' @importFrom odin odin
@@ -111,7 +111,7 @@ scan_gen_fr_parms <- function(
     i = 1:no_lhs_samples,
     .combine = "c") %do% {
 
-      nll <- calc_nll_gen_fr(
+      nll <- calc_gen_fr_nll(
         n_eaten = n_eaten,
         n_initial = n_initial,
         p = p,

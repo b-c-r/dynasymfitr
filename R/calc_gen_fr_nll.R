@@ -1,6 +1,6 @@
 #' Calculate the negative log-likelihood of the generalized functional response model
 #'
-#' @description `calc_nll_gen_fr` calculates the negative log likelihood of the
+#' @description `calc_gen_fr_nll` calculates the negative log likelihood of the
 #'     generalized functional response model (Real 1977, 1979), but see the
 #'     description of `compile_gen_fr` for further information. The calculation
 #'     of the likelihood assumes a binomial distribution of the dependent data,
@@ -96,7 +96,7 @@
 #' fr_data <- data_vucic_pestic_et_al_2010_j_anim_ecol
 #'
 #' fit <- bbmle::mle2(
-#'   minuslogl = calc_nll_gen_fr,
+#'   minuslogl = calc_gen_fr_nll,
 #'   start = list(
 #'     f_max_log10  = log10(max(fr_data$n_eaten)),
 #'     n_half_log10 = log10(mean(fr_data$n_initial)),
@@ -114,7 +114,7 @@
 #' bbmle::summary(fit)
 #'
 
-calc_nll_gen_fr <- function(
+calc_gen_fr_nll <- function(
     n_eaten,
     n_initial,
     p,
