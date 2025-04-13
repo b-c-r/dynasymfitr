@@ -17,7 +17,10 @@ scan_gen_fr_parms(
   penalty = 1000,
   q_low = 0,
   q_up = 1,
-  no_lhs_samples = 1000
+  no_lhs_samples = 1000,
+  use_parallel_computing = FALSE,
+  max_no_threads = 1,
+  force_all_threads = FALSE
 )
 }
 \arguments{
@@ -61,6 +64,19 @@ if(q > q_up) nll + penalty*(q-q_up)^2}
 
 \item{no_lhs_samples}{a single integer value; the number of random latin
 hypercube samplings. Default = 1000.}
+
+\item{use_parallel_computing}{Unleash the power of your computer by allow for
+parallel computing. Default is FALSE.}
+
+\item{max_no_threads}{Only used if \code{use_parallel_computing} is TRUE. The
+number of threads that should be used for parallel computing. Don't use
+too many cores and do not overload your system. Default = 1.}
+
+\item{force_all_threads}{Would you like to force the function to use the
+maximum number of threads you defined in \code{max_no_threads}. If FALSE, the
+functions tries to find a sweet spot of threads that depend on
+\code{no_lhs_samples}. E.g., if you define to use 16 threads, and 1000 samples
+should be taken it only uses 10 to get an even use of threads.}
 }
 \value{
 Returns a data frame with a single row of parameter values.
@@ -85,17 +101,49 @@ requires the lhs package (Carnell 2024). See also the description of
 }
 \examples{
 
+
 fr_data <- data_vucic_pestic_et_al_2010_j_anim_ecol
 
-scan_gen_fr_parms(
-  n_eaten = fr_data$n_eaten,
-  n_initial = fr_data$n_initial,
-  p = rep(1, nrow(fr_data)),
-  t_end = rep(1, nrow(fr_data)),
-  f_max_range_log10 = log10(c(1, max(fr_data$n_eaten))),
-  n_half_range_log10 = log10(c(1, max(fr_data$n_initial))),
-  q_range = c(0, 1)
-)
+# Compute the results sequentially:
+
+time_seq <- system.time({
+  results_seq <- scan_gen_fr_parms(
+    n_eaten = fr_data$n_eaten,
+    n_initial = fr_data$n_initial,
+    p = rep(1, nrow(fr_data)),
+    t_end = rep(1, nrow(fr_data)),
+    f_max_range_log10 = log10(c(1, max(fr_data$n_eaten))),
+    n_half_range_log10 = log10(c(1, max(fr_data$n_initial))),
+    q_range = c(0, 1),
+    no_lhs_samples = 100
+  )
+})[[3]]
+
+# the results:
+results_seq
+
+
+time_par <- system.time({
+  results_par <- scan_gen_fr_parms(
+    n_eaten = fr_data$n_eaten,
+    n_initial = fr_data$n_initial,
+    p = rep(1, nrow(fr_data)),
+    t_end = rep(1, nrow(fr_data)),
+    f_max_range_log10 = log10(c(1, max(fr_data$n_eaten))),
+    n_half_range_log10 = log10(c(1, max(fr_data$n_initial))),
+    q_range = c(0, 1),
+    no_lhs_samples = 100,
+    use_parallel_computing = TRUE,
+    max_no_threads = 2
+  )
+})[[3]]
+
+# the results:
+results_par
+
+# compare the time required:
+time_seq
+time_par
 
 }
 \references{

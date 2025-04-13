@@ -33,6 +33,8 @@
 #' @import foreach
 #' @importFrom odin odin
 #' @import lhs
+#' @import parallel
+#' @import doParallel
 #'
 #' @param n_eaten integer (or float); the prey items that were eaten throughout
 #'     the experimental trial. A vector.
@@ -62,6 +64,16 @@
 #' @param q_up upper soft boundary of q, default = 1 (Type III FR).
 #' @param no_lhs_samples a single integer value; the number of random latin
 #'     hypercube samplings. Default = 1000.
+#' @param use_parallel_computing Unleash the power of your computer by allow for
+#'     parallel computing. Default is FALSE.
+#' @param max_no_threads Only used if `use_parallel_computing` is TRUE. The
+#'     number of threads that should be used for parallel computing. Don't use
+#'     too many cores and do not overload your system. Default = 1.
+#' @param force_all_threads Would you like to force the function to use the
+#'     maximum number of threads you defined in `max_no_threads`. If FALSE, the
+#'     functions tries to find a sweet spot of threads that depend on
+#'     `no_lhs_samples`. E.g., if you define to use 16 threads, and 1000 samples
+#'     should be taken it only uses 10 to get an even use of threads.
 #'
 #' @return Returns a data frame with a single row of parameter values.
 #'
@@ -69,17 +81,49 @@
 #'
 #' @examples
 #'
+#'
 #' fr_data <- data_vucic_pestic_et_al_2010_j_anim_ecol
 #'
-#' scan_gen_fr_parms(
-#'   n_eaten = fr_data$n_eaten,
-#'   n_initial = fr_data$n_initial,
-#'   p = rep(1, nrow(fr_data)),
-#'   t_end = rep(1, nrow(fr_data)),
-#'   f_max_range_log10 = log10(c(1, max(fr_data$n_eaten))),
-#'   n_half_range_log10 = log10(c(1, max(fr_data$n_initial))),
-#'   q_range = c(0, 1)
-#' )
+#' # Compute the results sequentially:
+#'
+#' time_seq <- system.time({
+#'   results_seq <- scan_gen_fr_parms(
+#'     n_eaten = fr_data$n_eaten,
+#'     n_initial = fr_data$n_initial,
+#'     p = rep(1, nrow(fr_data)),
+#'     t_end = rep(1, nrow(fr_data)),
+#'     f_max_range_log10 = log10(c(1, max(fr_data$n_eaten))),
+#'     n_half_range_log10 = log10(c(1, max(fr_data$n_initial))),
+#'     q_range = c(0, 1),
+#'     no_lhs_samples = 100
+#'   )
+#' })[[3]]
+#'
+#' # the results:
+#' results_seq
+#'
+#'
+#' time_par <- system.time({
+#'   results_par <- scan_gen_fr_parms(
+#'     n_eaten = fr_data$n_eaten,
+#'     n_initial = fr_data$n_initial,
+#'     p = rep(1, nrow(fr_data)),
+#'     t_end = rep(1, nrow(fr_data)),
+#'     f_max_range_log10 = log10(c(1, max(fr_data$n_eaten))),
+#'     n_half_range_log10 = log10(c(1, max(fr_data$n_initial))),
+#'     q_range = c(0, 1),
+#'     no_lhs_samples = 100,
+#'     use_parallel_computing = TRUE,
+#'     max_no_threads = 2
+#'   )
+#' })[[3]]
+#'
+#' # the results:
+#' results_par
+#'
+#' # compare the time required:
+#' time_seq
+#' time_par
 #'
 
 scan_gen_fr_parms <- function(
@@ -95,7 +139,10 @@ scan_gen_fr_parms <- function(
     penalty = 1000,
     q_low = 0,
     q_up = 1,
-    no_lhs_samples = 1000
+    no_lhs_samples = 1000,
+    use_parallel_computing = FALSE,
+    max_no_threads = 1,
+    force_all_threads = FALSE
 ){
 
   lhsvals <- lhs::randomLHS(no_lhs_samples, 3)
@@ -104,30 +151,102 @@ scan_gen_fr_parms <- function(
   n_half_range_log10 <- log10((lhsvals[,2] * (10^n_half_range_log10[2] - 10^n_half_range_log10[1])) + 10^n_half_range_log10[1])
   q_range            <- (lhsvals[,3] * (q_range[2]-q_range[1])) + q_range[1]
 
+
   i <- NULL
 
-  ## calculate nlls
-  nlls <- foreach::foreach(
-    i = 1:no_lhs_samples,
-    .combine = "c") %do% {
+  if(!use_parallel_computing){
+    ## use one thread:
 
-      nll <- calc_gen_fr_nll(
-        n_eaten = n_eaten,
-        n_initial = n_initial,
-        p = p,
-        t_end = t_end,
-        t_start = t_start,
-        t_length = t_length,
-        f_max_log10 = f_max_range_log10[i],
-        n_half_log10 = n_half_range_log10[i],
-        q = q_range[i],
-        penalty = penalty,
-        q_low = q_low,
-        q_up = q_up
-      )
+    ## calculate nlls
+    nlls <- foreach::foreach(
+      i = 1:no_lhs_samples,
+      .combine = "c") %do% {
 
-      return(nll)
+        nll <- calc_gen_fr_nll(
+          n_eaten = n_eaten,
+          n_initial = n_initial,
+          p = p,
+          t_end = t_end,
+          t_start = t_start,
+          t_length = t_length,
+          f_max_log10 = f_max_range_log10[i],
+          n_half_log10 = n_half_range_log10[i],
+          q = q_range[i],
+          penalty = penalty,
+          q_low = q_low,
+          q_up = q_up
+        )
+
+        return(nll)
+      }
+
+  } else{
+    if(max_no_threads == 1){
+
+      ## use one thread:
+      ## calculate nlls
+      nlls <- foreach::foreach(
+        i = 1:no_lhs_samples,
+        .combine = "c") %do% {
+
+          nll <- calc_gen_fr_nll(
+            n_eaten = n_eaten,
+            n_initial = n_initial,
+            p = p,
+            t_end = t_end,
+            t_start = t_start,
+            t_length = t_length,
+            f_max_log10 = f_max_range_log10[i],
+            n_half_log10 = n_half_range_log10[i],
+            q = q_range[i],
+            penalty = penalty,
+            q_low = q_low,
+            q_up = q_up
+          )
+
+          return(nll)
+        }
+
+    } else{
+
+      ## use more than one thread:
+
+      if(!force_all_threads){
+        no_threads <- max((1:max_no_threads)[no_lhs_samples %% 1:max_no_threads == 0])
+      } else{
+        no_threads <- max_no_threads
+      }
+
+      cl <- parallel::makeCluster(no_threads)
+      doParallel::registerDoParallel(cl)
+
+      ## calculate nlls
+      nlls <- foreach::foreach(
+        i = 1:no_lhs_samples,
+        .packages = c("foreach", "dynafit"),
+        .combine = "c") %dopar% {
+
+          nll <- calc_gen_fr_nll(
+            n_eaten = n_eaten,
+            n_initial = n_initial,
+            p = p,
+            t_end = t_end,
+            t_start = t_start,
+            t_length = t_length,
+            f_max_log10 = f_max_range_log10[i],
+            n_half_log10 = n_half_range_log10[i],
+            q = q_range[i],
+            penalty = penalty,
+            q_low = q_low,
+            q_up = q_up
+          )
+
+          return(nll)
+        }
+        parallel::stopCluster(cl)
+
     }
+  }
 
   rm(i)
 
