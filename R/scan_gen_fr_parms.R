@@ -74,8 +74,11 @@
 #'     functions tries to find a sweet spot of threads that depend on
 #'     `no_lhs_samples`. E.g., if you define to use 16 threads, and 1000 samples
 #'     should be taken it only uses 10 to get an even use of threads.
+#' @param return_all_trials Should all estimates be returned? Default is FALSE.
+#'     In this case only the parameters for the lowest nll are returned.
 #'
-#' @return Returns a data frame with a single row of parameter values.
+#' @return Returns a data frame with a single row of parameter values. If
+#'     `return_all_trials` is TRUE all estimates are returned.
 #'
 #' @export
 #'
@@ -142,7 +145,8 @@ scan_gen_fr_parms <- function(
     no_lhs_samples = 1000,
     use_parallel_computing = FALSE,
     max_no_threads = 1,
-    force_all_threads = FALSE
+    force_all_threads = FALSE,
+    return_all_trials = FALSE
 ){
 
   lhsvals <- lhs::randomLHS(no_lhs_samples, 3)
@@ -250,12 +254,21 @@ scan_gen_fr_parms <- function(
 
   rm(i)
 
-  sel_parms <- data.frame(
-    f_max_log10 = f_max_range_log10[nlls == min(nlls)],
-    n_half_log10 = n_half_range_log10[nlls == min(nlls)],
-    q = q_range[nlls == min(nlls)],
-    nll = nlls[nlls == min(nlls)]
-  )
+  if(!return_all_trials){
+    sel_parms <- data.frame(
+      f_max_log10 = f_max_range_log10[nlls == min(nlls)],
+      n_half_log10 = n_half_range_log10[nlls == min(nlls)],
+      q = q_range[nlls == min(nlls)],
+      nll = nlls[nlls == min(nlls)]
+    )
+  } else{
+    sel_parms <- data.frame(
+      f_max_log10 = f_max_range_log10,
+      n_half_log10 = n_half_range_log10,
+      q = q_range,
+      nll = nlls
+    )
+  }
 
   return(sel_parms)
 }
