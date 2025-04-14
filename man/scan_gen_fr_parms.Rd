@@ -20,7 +20,8 @@ scan_gen_fr_parms(
   no_lhs_samples = 1000,
   use_parallel_computing = FALSE,
   max_no_threads = 1,
-  force_all_threads = FALSE
+  force_all_threads = FALSE,
+  return_all_trials = FALSE
 )
 }
 \arguments{
@@ -77,9 +78,13 @@ maximum number of threads you defined in \code{max_no_threads}. If FALSE, the
 functions tries to find a sweet spot of threads that depend on
 \code{no_lhs_samples}. E.g., if you define to use 16 threads, and 1000 samples
 should be taken it only uses 10 to get an even use of threads.}
+
+\item{return_all_trials}{Should all estimates be returned? Default is FALSE.
+In this case only the parameters for the lowest nll are returned.}
 }
 \value{
-Returns a data frame with a single row of parameter values.
+Returns a data frame with a single row of parameter values. If
+\code{return_all_trials} is TRUE all estimates are returned.
 }
 \description{
 \code{scan_gen_fr_parms} creates Latin hypercube samples for the
