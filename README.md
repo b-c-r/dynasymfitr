@@ -6,6 +6,7 @@ dynafit: Fitting dynamic ecological population models to laboratory data
 ## Overview
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 The goal of `dynafit` is to provide a set of functions to analyze
@@ -75,7 +76,7 @@ Fit the model to the data:
 
 ``` r
 fit <- bbmle::mle2(
-  minuslogl = calc_nll_gen_fr,
+  minuslogl = calc_gen_fr_nll,
   start = list(
     f_max_log10  = log10(max(fr_data$n_eaten)),
     n_half_log10 = log10(mean(fr_data$n_initial)),
@@ -99,7 +100,7 @@ bbmle::summary(fit)
 #> Maximum likelihood estimation
 #> 
 #> Call:
-#> bbmle::mle2(minuslogl = calc_nll_gen_fr, start = list(f_max_log10 = log10(max(fr_data$n_eaten)), 
+#> bbmle::mle2(minuslogl = calc_gen_fr_nll, start = list(f_max_log10 = log10(max(fr_data$n_eaten)), 
 #>     n_half_log10 = log10(mean(fr_data$n_initial)), q = 0.2), 
 #>     data = list(n_eaten = fr_data$n_eaten, n_initial = fr_data$n_initial, 
 #>         p = rep(1, nrow(fr_data)), t_end = rep(1, nrow(fr_data))), 
@@ -149,8 +150,9 @@ lines(
 
 ## Funding Information
 
-- Björn C. Rall gratefully acknowledges the funding by the **German
-  Science Foundation (DFG) to the Research Unit DynaSym (FOR 5064)**.
+- Björn C. Rall gratefully acknowledges the funding by the [**German
+  Science Foundation (DFG) to the Research Unit DynaSym (FOR
+  5726)**](https://gepris.dfg.de/gepris/projekt/528028597).
 
 ## References
 
