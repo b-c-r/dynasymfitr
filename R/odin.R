@@ -116,3 +116,120 @@ gen_fr_model <- function(..., user = list(...), use_dde = FALSE,
 }
 class(gen_fr_model) <- "odin_generator"
 attr(gen_fr_model, "generator") <- gen_fr_model_
+logistic_growth_model_ <- R6::R6Class(
+  "odin_model",
+  cloneable = FALSE,
+
+  private = list(
+    ptr = NULL,
+    use_dde = NULL,
+
+    odin = NULL,
+    variable_order = NULL,
+    output_order = NULL,
+    n_out = NULL,
+    ynames = NULL,
+    interpolate_t = NULL,
+    cfuns = list(
+      rhs_dde = "logistic_growth_model_rhs_dde",
+      rhs_desolve = "logistic_growth_model_rhs_desolve",
+      initmod_desolve = "logistic_growth_model_initmod_desolve"),
+    dll = "dynasymfitr",
+    user = c("K", "n_initial", "r"),
+
+    ## This is never called, but is used to ensure that R finds our
+    ## symbols that we will use from the package; without this they
+    ## cannot be found by dynamic lookup now that we use the package
+    ## FFI registration system.
+    registration = function() {
+      if (FALSE) {
+        .C("logistic_growth_model_rhs_dde", package = "dynasymfitr")
+        .C("logistic_growth_model_rhs_desolve", package = "dynasymfitr")
+        .C("logistic_growth_model_initmod_desolve", package = "dynasymfitr")
+      }
+    },
+
+    ## This only does something in delay models
+    set_initial = function(t, y, use_dde) {
+      .Call("logistic_growth_model_set_initial", private$ptr, t, y, use_dde,
+            PACKAGE= "dynasymfitr")
+    },
+
+    update_metadata = function() {
+      meta <- .Call("logistic_growth_model_metadata", private$ptr,
+                    PACKAGE = "dynasymfitr")
+      private$variable_order <- meta$variable_order
+      private$output_order <- meta$output_order
+      private$n_out <- meta$n_out
+      private$ynames <- private$odin$make_names(
+        private$variable_order, private$output_order, FALSE)
+      private$interpolate_t <- meta$interpolate_t
+    }
+  ),
+
+  public = list(
+    initialize = function(..., user = list(...), use_dde = FALSE,
+                          unused_user_action = NULL) {
+      private$odin <- asNamespace("odin")
+      private$ptr <- .Call("logistic_growth_model_create", user, PACKAGE = "dynasymfitr")
+      self$set_user(user = user, unused_user_action = unused_user_action)
+      private$use_dde <- use_dde
+      private$update_metadata()
+    },
+
+    ir = function() {
+      path_ir <- system.file("odin/logistic_growth_model.json", mustWork = TRUE,
+                             package = "dynasymfitr")
+      json <- readLines(path_ir)
+      class(json) <- "json"
+      json
+    },
+
+    ## Do we need to have the user-settable args here? It would be
+    ## nice, but that's not super straightforward to do.
+    set_user = function(..., user = list(...), unused_user_action = NULL) {
+      private$odin$support_check_user(user, private$user, unused_user_action)
+      .Call("logistic_growth_model_set_user", private$ptr, user, PACKAGE = "dynasymfitr")
+      private$update_metadata()
+    },
+
+    ## This might be time sensitive and, so we can avoid computing
+    ## it. I wonder if that's an optimisation we should drop for now
+    ## as it does not seem generally useful. This would bring us
+    ## closer to the js version which requires that we always pass the
+    ## time in.
+    initial = function(t) {
+      .Call("logistic_growth_model_initial_conditions", private$ptr, t, PACKAGE = "dynasymfitr")
+    },
+
+    rhs = function(t, y) {
+      .Call("logistic_growth_model_rhs_r", private$ptr, t, y, PACKAGE = "dynasymfitr")
+    },
+
+    deriv = function(t, y) {
+      self$rhs(t, y)
+    },
+
+    contents = function() {
+      .Call("logistic_growth_model_contents", private$ptr, PACKAGE = "dynasymfitr")
+    },
+
+    transform_variables = function(y) {
+      private$odin$support_transform_variables(y, private)
+    },
+
+    run = function(t, y = NULL, ..., use_names = TRUE) {
+      private$odin$wrapper_run_ode(
+        self, private, t, y, ..., use_names = use_names)
+    }
+  ))
+
+
+logistic_growth_model <- function(..., user = list(...), use_dde = FALSE,
+                     unused_user_action = NULL) {
+  asNamespace("odin")$deprecated_constructor_call("logistic_growth_model")
+  logistic_growth_model_$new(user = user, use_dde = use_dde,
+                unused_user_action = unused_user_action)
+}
+class(logistic_growth_model) <- "odin_generator"
+attr(logistic_growth_model, "generator") <- logistic_growth_model_

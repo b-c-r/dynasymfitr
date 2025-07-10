@@ -13,6 +13,12 @@ typedef struct gen_fr_model_internal {
   double p;
   double q;
 } gen_fr_model_internal;
+typedef struct logistic_growth_model_internal {
+  double initial_n;
+  double K;
+  double n_initial;
+  double r;
+} logistic_growth_model_internal;
 gen_fr_model_internal* gen_fr_model_get_internal(SEXP internal_p, int closed_error);
 static void gen_fr_model_finalise(SEXP internal_p);
 SEXP gen_fr_model_create(SEXP user);
@@ -26,6 +32,19 @@ void gen_fr_model_rhs(gen_fr_model_internal* internal, double t, double * state,
 void gen_fr_model_rhs_dde(size_t neq, double t, double * state, double * dstatedt, void * internal);
 void gen_fr_model_rhs_desolve(int * neq, double * t, double * state, double * dstatedt, double * output, int * np);
 SEXP gen_fr_model_rhs_r(SEXP internal_p, SEXP t, SEXP state);
+logistic_growth_model_internal* logistic_growth_model_get_internal(SEXP internal_p, int closed_error);
+static void logistic_growth_model_finalise(SEXP internal_p);
+SEXP logistic_growth_model_create(SEXP user);
+void logistic_growth_model_initmod_desolve(void(* odeparms) (int *, double *));
+SEXP logistic_growth_model_contents(SEXP internal_p);
+SEXP logistic_growth_model_set_user(SEXP internal_p, SEXP user);
+SEXP logistic_growth_model_set_initial(SEXP internal_p, SEXP t_ptr, SEXP state_ptr, SEXP logistic_growth_model_use_dde_ptr);
+SEXP logistic_growth_model_metadata(SEXP internal_p);
+SEXP logistic_growth_model_initial_conditions(SEXP internal_p, SEXP t_ptr);
+void logistic_growth_model_rhs(logistic_growth_model_internal* internal, double t, double * state, double * dstatedt, double * output);
+void logistic_growth_model_rhs_dde(size_t neq, double t, double * state, double * dstatedt, void * internal);
+void logistic_growth_model_rhs_desolve(int * neq, double * t, double * state, double * dstatedt, double * output, int * np);
+SEXP logistic_growth_model_rhs_r(SEXP internal_p, SEXP t, SEXP state);
 double user_get_scalar_double(SEXP user, const char *name,
                               double default_value, double min, double max);
 int user_get_scalar_int(SEXP user, const char *name,
@@ -154,6 +173,117 @@ SEXP gen_fr_model_rhs_r(SEXP internal_p, SEXP t, SEXP state) {
   gen_fr_model_internal *internal = gen_fr_model_get_internal(internal_p, 1);
   double *output = NULL;
   gen_fr_model_rhs(internal, scalar_real(t, "t"), REAL(state), REAL(dstatedt), output);
+  UNPROTECT(1);
+  return dstatedt;
+}
+logistic_growth_model_internal* logistic_growth_model_get_internal(SEXP internal_p, int closed_error) {
+  logistic_growth_model_internal *internal = NULL;
+  if (TYPEOF(internal_p) != EXTPTRSXP) {
+    Rf_error("Expected an external pointer");
+  }
+  internal = (logistic_growth_model_internal*) R_ExternalPtrAddr(internal_p);
+  if (!internal && closed_error) {
+    Rf_error("Pointer has been invalidated");
+  }
+  return internal;
+}
+void logistic_growth_model_finalise(SEXP internal_p) {
+  logistic_growth_model_internal *internal = logistic_growth_model_get_internal(internal_p, 0);
+  if (internal_p) {
+    R_Free(internal);
+    R_ClearExternalPtr(internal_p);
+  }
+}
+SEXP logistic_growth_model_create(SEXP user) {
+  logistic_growth_model_internal *internal = (logistic_growth_model_internal*) R_Calloc(1, logistic_growth_model_internal);
+  internal->K = NA_REAL;
+  internal->n_initial = NA_REAL;
+  internal->r = NA_REAL;
+  SEXP ptr = PROTECT(R_MakeExternalPtr(internal, R_NilValue, R_NilValue));
+  R_RegisterCFinalizer(ptr, logistic_growth_model_finalise);
+  UNPROTECT(1);
+  return ptr;
+}
+static logistic_growth_model_internal *logistic_growth_model_internal_ds;
+void logistic_growth_model_initmod_desolve(void(* odeparms) (int *, double *)) {
+  static DL_FUNC get_desolve_gparms = NULL;
+  if (get_desolve_gparms == NULL) {
+    get_desolve_gparms =
+      R_GetCCallable("deSolve", "get_deSolve_gparms");
+  }
+  logistic_growth_model_internal_ds = logistic_growth_model_get_internal(get_desolve_gparms(), 1);
+}
+SEXP logistic_growth_model_contents(SEXP internal_p) {
+  logistic_growth_model_internal *internal = logistic_growth_model_get_internal(internal_p, 1);
+  SEXP contents = PROTECT(allocVector(VECSXP, 4));
+  SET_VECTOR_ELT(contents, 0, ScalarReal(internal->initial_n));
+  SET_VECTOR_ELT(contents, 1, ScalarReal(internal->K));
+  SET_VECTOR_ELT(contents, 2, ScalarReal(internal->n_initial));
+  SET_VECTOR_ELT(contents, 3, ScalarReal(internal->r));
+  SEXP nms = PROTECT(allocVector(STRSXP, 4));
+  SET_STRING_ELT(nms, 0, mkChar("initial_n"));
+  SET_STRING_ELT(nms, 1, mkChar("K"));
+  SET_STRING_ELT(nms, 2, mkChar("n_initial"));
+  SET_STRING_ELT(nms, 3, mkChar("r"));
+  setAttrib(contents, R_NamesSymbol, nms);
+  UNPROTECT(2);
+  return contents;
+}
+SEXP logistic_growth_model_set_user(SEXP internal_p, SEXP user) {
+  logistic_growth_model_internal *internal = logistic_growth_model_get_internal(internal_p, 1);
+  internal->K = user_get_scalar_double(user, "K", internal->K, NA_REAL, NA_REAL);
+  internal->n_initial = user_get_scalar_double(user, "n_initial", internal->n_initial, NA_REAL, NA_REAL);
+  internal->r = user_get_scalar_double(user, "r", internal->r, NA_REAL, NA_REAL);
+  internal->initial_n = internal->n_initial;
+  return R_NilValue;
+}
+SEXP logistic_growth_model_set_initial(SEXP internal_p, SEXP t_ptr, SEXP state_ptr, SEXP logistic_growth_model_use_dde_ptr) {
+  return R_NilValue;
+}
+SEXP logistic_growth_model_metadata(SEXP internal_p) {
+  logistic_growth_model_internal *internal = logistic_growth_model_get_internal(internal_p, 1);
+  SEXP ret = PROTECT(allocVector(VECSXP, 4));
+  SEXP nms = PROTECT(allocVector(STRSXP, 4));
+  SET_STRING_ELT(nms, 0, mkChar("variable_order"));
+  SET_STRING_ELT(nms, 1, mkChar("output_order"));
+  SET_STRING_ELT(nms, 2, mkChar("n_out"));
+  SET_STRING_ELT(nms, 3, mkChar("interpolate_t"));
+  setAttrib(ret, R_NamesSymbol, nms);
+  SEXP variable_length = PROTECT(allocVector(VECSXP, 1));
+  SEXP variable_names = PROTECT(allocVector(STRSXP, 1));
+  setAttrib(variable_length, R_NamesSymbol, variable_names);
+  SET_VECTOR_ELT(variable_length, 0, R_NilValue);
+  SET_STRING_ELT(variable_names, 0, mkChar("n"));
+  SET_VECTOR_ELT(ret, 0, variable_length);
+  UNPROTECT(2);
+  SET_VECTOR_ELT(ret, 1, R_NilValue);
+  SET_VECTOR_ELT(ret, 2, ScalarInteger(0));
+  UNPROTECT(2);
+  return ret;
+}
+SEXP logistic_growth_model_initial_conditions(SEXP internal_p, SEXP t_ptr) {
+  logistic_growth_model_internal *internal = logistic_growth_model_get_internal(internal_p, 1);
+  SEXP r_state = PROTECT(allocVector(REALSXP, 1));
+  double * state = REAL(r_state);
+  state[0] = internal->initial_n;
+  UNPROTECT(1);
+  return r_state;
+}
+void logistic_growth_model_rhs(logistic_growth_model_internal* internal, double t, double * state, double * dstatedt, double * output) {
+  double n = state[0];
+  dstatedt[0] = internal->r * n * (1 - n / (double) internal->K);
+}
+void logistic_growth_model_rhs_dde(size_t neq, double t, double * state, double * dstatedt, void * internal) {
+  logistic_growth_model_rhs((logistic_growth_model_internal*)internal, t, state, dstatedt, NULL);
+}
+void logistic_growth_model_rhs_desolve(int * neq, double * t, double * state, double * dstatedt, double * output, int * np) {
+  logistic_growth_model_rhs(logistic_growth_model_internal_ds, *t, state, dstatedt, output);
+}
+SEXP logistic_growth_model_rhs_r(SEXP internal_p, SEXP t, SEXP state) {
+  SEXP dstatedt = PROTECT(allocVector(REALSXP, LENGTH(state)));
+  logistic_growth_model_internal *internal = logistic_growth_model_get_internal(internal_p, 1);
+  double *output = NULL;
+  logistic_growth_model_rhs(internal, scalar_real(t, "t"), REAL(state), REAL(dstatedt), output);
   UNPROTECT(1);
   return dstatedt;
 }
