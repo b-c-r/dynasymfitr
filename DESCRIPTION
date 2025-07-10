@@ -1,20 +1,19 @@
-Package: dynafit
-Title: Fitting dynamic ecological population models to laboratory data
+Package: dynasymfitr
+Title: Fitting dynamically simulated ecological population models to laboratory data
 Version: 0.0.0.9000
 Authors@R: 
     person("Björn C.", "Rall", , "bjoern.rall@uni-konstanz.de", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-3191-8389"))
-Description: This package will host functions to estimate the strength of
-    density-dependent symbiotic species interactions as part of the
-    DFG-funded research unit 5726, DynaSym
-    (https://www.dynasym.uni-konstanz.de/). The research unit aims at
-    combining laboratory experiments and ecological theory, which requires
-    sophisticated statistical methods, including the combination of
-    numerical simulations of population models with maximum likelihood
-    estimators, or Bayesian MCMC parameter estimation. The package will
-    include functions to fit, e.g., several functional response models or
-    nutrient uptake models while correcting for inferring processes such
-    as resource growth or consumer death that would otherwise harm precise
+Description: This package hosts functions to estimate the strength of
+    density-dependent symbiotic species interactions as part of the DFG-funded
+    research unit 5726, DynaSym (https://www.dynasym.uni-konstanz.de/). The
+    research unit aims at combining laboratory experiments and ecological
+    theory, which requires sophisticated statistical methods, including the
+    combination of numerical simulations of population models with maximum
+    likelihood estimators or Bayesian MCMC parameter estimation. The package
+    will include functions to fit, e.g., several functional response models or
+    nutrient uptake models while correcting for inferring processes such as
+    resource growth or consumer death that would otherwise harm precise
     parameter estimation.
 License: GPL (>= 3)
 Encoding: UTF-8
@@ -30,8 +29,8 @@ Suggests:
     bbmle,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-URL: https://github.com/b-c-r/dynafit
-BugReports: https://github.com/b-c-r/dynafit/issues
+URL: https://github.com/b-c-r/dynasymfitr
+BugReports: https://github.com/b-c-r/dynasymfitr/issues
 Collate: 
     'calc_gen_fr_nll.R'
     'data_vucic_pestic_et_al_2010_j_anim_ecol.R'

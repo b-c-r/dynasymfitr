@@ -17,7 +17,7 @@ gen_fr_model_ <- R6::R6Class(
       rhs_dde = "gen_fr_model_rhs_dde",
       rhs_desolve = "gen_fr_model_rhs_desolve",
       initmod_desolve = "gen_fr_model_initmod_desolve"),
-    dll = "dynafit",
+    dll = "dynasymfitr",
     user = c("f_max", "n_half", "n_initial", "p", "q"),
 
     ## This is never called, but is used to ensure that R finds our
@@ -26,21 +26,21 @@ gen_fr_model_ <- R6::R6Class(
     ## FFI registration system.
     registration = function() {
       if (FALSE) {
-        .C("gen_fr_model_rhs_dde", package = "dynafit")
-        .C("gen_fr_model_rhs_desolve", package = "dynafit")
-        .C("gen_fr_model_initmod_desolve", package = "dynafit")
+        .C("gen_fr_model_rhs_dde", package = "dynasymfitr")
+        .C("gen_fr_model_rhs_desolve", package = "dynasymfitr")
+        .C("gen_fr_model_initmod_desolve", package = "dynasymfitr")
       }
     },
 
     ## This only does something in delay models
     set_initial = function(t, y, use_dde) {
       .Call("gen_fr_model_set_initial", private$ptr, t, y, use_dde,
-            PACKAGE= "dynafit")
+            PACKAGE= "dynasymfitr")
     },
 
     update_metadata = function() {
       meta <- .Call("gen_fr_model_metadata", private$ptr,
-                    PACKAGE = "dynafit")
+                    PACKAGE = "dynasymfitr")
       private$variable_order <- meta$variable_order
       private$output_order <- meta$output_order
       private$n_out <- meta$n_out
@@ -54,7 +54,7 @@ gen_fr_model_ <- R6::R6Class(
     initialize = function(..., user = list(...), use_dde = FALSE,
                           unused_user_action = NULL) {
       private$odin <- asNamespace("odin")
-      private$ptr <- .Call("gen_fr_model_create", user, PACKAGE = "dynafit")
+      private$ptr <- .Call("gen_fr_model_create", user, PACKAGE = "dynasymfitr")
       self$set_user(user = user, unused_user_action = unused_user_action)
       private$use_dde <- use_dde
       private$update_metadata()
@@ -62,7 +62,7 @@ gen_fr_model_ <- R6::R6Class(
 
     ir = function() {
       path_ir <- system.file("odin/gen_fr_model.json", mustWork = TRUE,
-                             package = "dynafit")
+                             package = "dynasymfitr")
       json <- readLines(path_ir)
       class(json) <- "json"
       json
@@ -72,7 +72,7 @@ gen_fr_model_ <- R6::R6Class(
     ## nice, but that's not super straightforward to do.
     set_user = function(..., user = list(...), unused_user_action = NULL) {
       private$odin$support_check_user(user, private$user, unused_user_action)
-      .Call("gen_fr_model_set_user", private$ptr, user, PACKAGE = "dynafit")
+      .Call("gen_fr_model_set_user", private$ptr, user, PACKAGE = "dynasymfitr")
       private$update_metadata()
     },
 
@@ -82,11 +82,11 @@ gen_fr_model_ <- R6::R6Class(
     ## closer to the js version which requires that we always pass the
     ## time in.
     initial = function(t) {
-      .Call("gen_fr_model_initial_conditions", private$ptr, t, PACKAGE = "dynafit")
+      .Call("gen_fr_model_initial_conditions", private$ptr, t, PACKAGE = "dynasymfitr")
     },
 
     rhs = function(t, y) {
-      .Call("gen_fr_model_rhs_r", private$ptr, t, y, PACKAGE = "dynafit")
+      .Call("gen_fr_model_rhs_r", private$ptr, t, y, PACKAGE = "dynasymfitr")
     },
 
     deriv = function(t, y) {
@@ -94,7 +94,7 @@ gen_fr_model_ <- R6::R6Class(
     },
 
     contents = function() {
-      .Call("gen_fr_model_contents", private$ptr, PACKAGE = "dynafit")
+      .Call("gen_fr_model_contents", private$ptr, PACKAGE = "dynasymfitr")
     },
 
     transform_variables = function(y) {

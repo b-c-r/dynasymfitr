@@ -1,4 +1,5 @@
-dynafit: Fitting dynamic ecological population models to laboratory data
+dynasymfitr: Fitting dynamic simulated ecological population models to
+laboratory data
 ================
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -9,10 +10,10 @@ dynafit: Fitting dynamic ecological population models to laboratory data
 
 <!-- badges: end -->
 
-The goal of `dynafit` is to provide a set of functions to analyze
+The goal of `dynasymfitr` is to provide a set of functions to analyze
 laboratory species interaction experiments in a way that the parameter
 estimates can be seamlessly integrated into theoretical/computational
-eco-evo projects. `dynafit` will be developed within the DFG-funded
+eco-evo projects. `dynasymfitr` will be developed within the DFG-funded
 research unit 5726, [DynaSym](https://www.dynasym.uni-konstanz.de/), but
 is not limited to it.
 
@@ -46,22 +47,22 @@ more information to the README in the future.
 
 ## Installation
 
-You can install the development version of dynafit from
+You can install the development version of dynasymfitr from
 [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("pak")
-pak::pak("b-c-r/dynafit")
+pak::pak("b-c-r/dynasymfitr")
 ```
 
 ## Examples
 
 ### Modelling resource decay over time
 
-First, load the `dynafit` and the `bbmle` package:
+First, load the `dynasymfitr` and the `bbmle` package:
 
 ``` r
-library("dynafit")
+library("dynasymfitr")
 # install.packages("bbmle")
 library("bbmle")
 ```

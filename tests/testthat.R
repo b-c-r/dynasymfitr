@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(dynafit)
+library(dynasymfitr)
 
-test_check("dynafit")
+test_check("dynasymfitr")

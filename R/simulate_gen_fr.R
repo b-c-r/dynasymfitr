@@ -16,7 +16,7 @@
 #' @references Real (1979) Ecological determinants of functional response.
 #'     Ecology 60, 481-485. https://doi.org/10.2307/1936067
 #'
-#' @useDynLib dynafit
+#' @useDynLib dynasymfitr
 #' @import foreach
 #' @importFrom odin odin
 #'

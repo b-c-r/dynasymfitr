@@ -1,8 +1,8 @@
-^dynafit\.Rproj$
+^dynasymfitr\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^README\.Rmd$
 ^references$
-^references/dynafit\.bib$
+^references/dynasymfitr\.bib$
 ^Rdev$
 ^data-raw$

@@ -25,7 +25,7 @@
 #' @references Jager and Ashauer (2018) Modelling survival under chemical stress
 #'     Leanpub. https://leanpub.com/guts_book
 #'
-#' @useDynLib dynafit
+#' @useDynLib dynasymfitr
 #'
 #' @include simulate_gen_fr.R
 #' @include calc_gen_fr_nll.R
@@ -227,7 +227,7 @@ scan_gen_fr_parms <- function(
       ## calculate nlls
       nlls <- foreach::foreach(
         i = 1:no_lhs_samples,
-        .packages = c("foreach", "dynafit"),
+        .packages = c("foreach", "dynasymfitr"),
         .combine = "c") %dopar% {
 
           nll <- calc_gen_fr_nll(

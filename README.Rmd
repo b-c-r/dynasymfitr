@@ -1,6 +1,6 @@
 ---
-title: "dynafit: Fitting dynamic ecological population models to laboratory data"
-bibliography: references/dynafit.bib
+title: "dynasymfitr: Fitting dynamic simulated ecological population models to laboratory data"
+bibliography: references/dynasymfitr.bib
 output: github_document
 ---
 
@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of `dynafit` is to provide a set of functions to analyze laboratory species interaction experiments in a way that the parameter estimates can be seamlessly integrated into theoretical/computational eco-evo projects. `dynafit` will be developed within the DFG-funded research unit 5726, [DynaSym](https://www.dynasym.uni-konstanz.de/), but is not limited to it.
+The goal of `dynasymfitr` is to provide a set of functions to analyze laboratory species interaction experiments in a way that the parameter estimates can be seamlessly integrated into theoretical/computational eco-evo projects. `dynasymfitr` will be developed within the DFG-funded research unit 5726, [DynaSym](https://www.dynasym.uni-konstanz.de/), but is not limited to it.
 
 Estimating density-dependent species interactions is not trivial. The possibly most prominent example is the density-dependent feeding rate, also known as functional response [@Holling1959CharacteristicsSimpleTypes]. Feeding is a temporal process, which requires that the functional response model be modeled as a differential equation describing the decay of the resource over time [@RosenbaumRall2018FittingFunctionalResponses]. While a so-called analytical solution exists for the classical hyperbolic type II functional response [@Royama1971ComparativeStudyModels; @Rogers1972RandomSearchInsect; @Bolker2008EcologicalModelsData], the differential equations of other functional response types need to be solved numerically while being fitted to data [@RosenbaumRall2018FittingFunctionalResponses] to avoid biases in the parameter evaluation.
 In addition to the above-mentioned problem, if using small organisms such as algae as resources and ciliates as consumers, even in short-term experiments these critters may grow or decline in population size (i.e., the numerical response) due to death and reproduction. This issue would add even more bias to the estimated parameters. However, by simulating the dynamics of resources and consumers explicitly, these biases can be corrected [@RosenbaumRall2018FittingFunctionalResponses].
@@ -30,21 +30,21 @@ Please note that this package is under development, and we will also add more in
 
 ## Installation
 
-You can install the development version of dynafit from [GitHub](https://github.com/) with:
+You can install the development version of dynasymfitr from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("pak")
-pak::pak("b-c-r/dynafit")
+pak::pak("b-c-r/dynasymfitr")
 ```
 
 ## Examples
 
 ### Modelling resource decay over time
 
-First, load the `dynafit` and the `bbmle` package:
+First, load the `dynasymfitr` and the `bbmle` package:
 
 ```{r example, message=FALSE, warning=FALSE}
-library("dynafit")
+library("dynasymfitr")
 # install.packages("bbmle")
 library("bbmle")
 ```

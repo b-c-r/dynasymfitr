@@ -59,7 +59,7 @@
 #'     non-permanent food-web dynamics. Eur Phys J B 38, 297-303.
 #'     https://doi.org10.1140/epjb/e2004-00122-1
 #'
-#' @useDynLib dynafit
+#' @useDynLib dynasymfitr
 #' @importFrom odin odin
 #' @importFrom stats dbinom
 #'
