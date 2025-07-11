@@ -11,7 +11,8 @@
 #' @param t_pulse integer or float; a vector of time points at which the pulse
 #'     (exchange of media) happens.
 #' @param fraction_exchanged float; The fraction of the population that is
-#'     removed at t_pulse. A single value tha must range from 0-1 (0% to 100%).
+#'     removed at t_pulse. A vector of values ranging from 0-1 (0% to 100%).
+#'     Must match the length of t_pulse.
 #' @param n_initial integer or float; a vector of initial resource densities.
 #' @param r float; the intrinsic growth rate. A single value.
 #' @param K float; the carrying capacity. A single value.

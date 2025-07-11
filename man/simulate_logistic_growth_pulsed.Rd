@@ -20,7 +20,8 @@ simulate_logistic_growth_pulsed(
 (exchange of media) happens.}
 
 \item{fraction_exchanged}{float; The fraction of the population that is
-removed at t_pulse. A single value tha must range from 0-1 (0\% to 100\%).}
+removed at t_pulse. A vector of values ranging from 0-1 (0\% to 100\%).
+Must match the length of t_pulse.}
 
 \item{n_initial}{integer or float; a vector of initial resource densities.}
 
