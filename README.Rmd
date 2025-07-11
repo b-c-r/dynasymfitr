@@ -68,7 +68,7 @@ But see [this thread](https://stackoverflow.com/questions/40179493/r-how-can-i-i
 
 ## Examples
 
-### Modelling resource decay over time
+### Fitting the generalized functional response
 
 First, load the `dynasymfitr` and the `bbmle` package:
 

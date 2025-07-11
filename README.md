@@ -98,7 +98,7 @@ how to install specific version and even specific commits.
 
 ## Examples
 
-### Modelling resource decay over time
+### Fitting the generalized functional response
 
 First, load the `dynasymfitr` and the `bbmle` package:
 
