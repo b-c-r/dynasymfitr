@@ -1,5 +1,5 @@
-dynasymfitr: Fitting dynamic simulated ecological population models to
-laboratory data
+dynasymfitr: Fitting dynamically simulated ecological population models
+to laboratory data
 ================
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -54,7 +54,7 @@ This package is published under the [**GNU General Public License
 
 If you use this R-package, please cite it:
 
-Rall, B.C. (2025): dynasymfitr: Fitting dynamic simulated ecological
+Rall, B.C. (2025): dynasymfitr: Fitting dynamically simulated ecological
 population models to laboratory data. Zenodo.
 <https://doi.org/10.5281/zenodo.15856656>.
 
@@ -67,8 +67,11 @@ Methods in Ecology and Evolution 9 (10): 2076–90.
 
 ### Cite specific versions:
 
-Rall, B.C. (2025): dynasymfitr: Fitting dynamic simulated ecological
-population models to laboratory data (v0.0.0.9000). Zenodo.
+Rall, B.C. (2025): dynasymfitr: Fitting dynamically simulated ecological
+population models to laboratory data (v0.0.0.9001). Zenodo.
+<https://doi.org/10.5281/zenodo.15863205>. Rall, B.C. (2025):
+dynasymfitr: Fitting dynamically simulated ecological population models
+to laboratory data (v0.0.0.9000). Zenodo.
 <https://doi.org/10.5281/zenodo.15856657>.
 
 ## Installation
@@ -189,6 +192,171 @@ lines(
 ```
 
 <img src="man/figures/README-fr_example-1.png" width="100%" />
+
+### Fitting a logistic growth curve assuming pulsed exchange of media
+
+A classical method to design time-series experiments in aquatic systems
+is to use chemostats with a constant influx of fresh media and outflux
+of the media including the organisms in the experiments. From this
+outflux, the researcher can estimate the current density of the
+organisms. Alternatively, a fraction of the media is replaced in more or
+less equally time intervals. This “pulsed” sampling are comparable to
+the chemostats, but the organisms do not have a continuous disturbance,
+but reoccurring disturbances events. You analyse such data in the
+following way. First, we simulate data:
+
+``` r
+library("bbmle") # for fitting procedure
+library("dynasymfitr")
+
+set.seed(667)
+
+data_log_growth <- simulate_logistic_growth_pulsed(
+  t_pulse = 0:20,                           # time at which media is exchanged or disturbance happens
+  fraction_exchanged = c(0, rep(0.1,20)),   # the fraction of media replaced (or the strength of disturbance)
+  n_initial = 1000,                         # the initial resource density
+  r = .8,                                   # the intrinsic growth rate
+  K = 100000                                # the carrying capacity
+)
+
+# create a second time series:
+data_log_growth <- rbind(data_log_growth, data_log_growth)
+data_log_growth$ts_id <- c(rep("A",21), rep("B",21))
+data_log_growth$frac_replaced <- c(0, rep(0.1,20), 0, rep(0.1,20))
+
+# add statistical noise (poisson distributed)
+data_log_growth$n_noise <- 10^(rnorm(n = length(data_log_growth$n), mean = log10(data_log_growth$n), sd = .05 ))
+```
+
+This example assumes that the time series data has very high densities,
+e.g. as often seen with unicells, such as algae, ciliates, or bacteria.
+The data can be counts, but also, to keep the values smaller, floating
+numbers, e.g. 12.3 individuals per microliter. Notably, this approach
+doesn’t allow for “0” in the density data! Most times, the density data
+is log-normal distributed, i.e. low variation if the density is low,
+high variation in the data if the densities are high. We simulate this
+with the last code line in the code block above.
+
+Our simulated laboratory data looks quite reasonable:
+
+``` r
+# plot the time series
+par(las=1)
+plot(
+  data_log_growth$t,
+  data_log_growth$n_noise,
+  ylim = c(0, 125000),
+  type = "n",
+  pch = 16,
+  xlab = "time",
+  ylab = "density"
+)
+points(
+  data_log_growth$t[data_log_growth$ts_id == "A"],
+  data_log_growth$n_noise[data_log_growth$ts_id == "A"],
+  pch = 16,
+  col = "blue"
+)
+points(
+  data_log_growth$t[data_log_growth$ts_id == "B"],
+  data_log_growth$n_noise[data_log_growth$ts_id == "B"],
+  pch = 16,
+  col = "red"
+)
+```
+
+<img src="man/figures/README-plot_log_growth_pulsed-1.png" width="100%" />
+
+You see two different time series, but the initial density is
+approximately the same. In the current version of the package, this
+requirnment must be fulfilled. I aim at making this more flexible later.
+
+### Fit the time series
+
+Like above for the generalized functional response, we use the great
+`bbmle` package to fit the data:
+
+``` r
+fit_lnorm <- bbmle::mle2(
+  minuslogl = calc_logistic_growth_nll_lnorm,
+  start = list(
+    param_r_log10 = log10(0.8),
+    param_K_log10 = log10(100000),
+    param_n_initial_log10 = log10(1000),
+    param_sd_log10 = log10(0.1)
+  ),
+  data = list(
+    data_time = data_log_growth$t,
+    data_density = data_log_growth$n_noise,
+    data_frac_exchanged = data_log_growth$frac_replaced,
+    data_ts_id = data_log_growth$ts_id
+    ),
+  fixed = list(
+    setting_t_length = 1000
+    ),
+  control = list(reltol = 1e-12, maxit = 1000)
+)
+```
+
+When looking at the results, you may note that the values look strange,
+this is caused by the fact that the parameters where fitted on a log10
+scale, to increase fitting speed and stability. Moreove it prevents the
+fitting algorithm to choose negative values, like e.g. a negative growth
+rate or carrying capacity.
+
+``` r
+bbmle::summary(fit_lnorm)
+#> Maximum likelihood estimation
+#> 
+#> Call:
+#> bbmle::mle2(minuslogl = calc_logistic_growth_nll_lnorm, start = list(param_r_log10 = log10(0.8), 
+#>     param_K_log10 = log10(1e+05), param_n_initial_log10 = log10(1000), 
+#>     param_sd_log10 = log10(0.1)), fixed = list(setting_t_length = 1000), 
+#>     data = list(data_time = data_log_growth$t, data_density = data_log_growth$n_noise, 
+#>         data_frac_exchanged = data_log_growth$frac_replaced, 
+#>         data_ts_id = data_log_growth$ts_id), control = list(reltol = 1e-12, 
+#>         maxit = 1000))
+#> 
+#> Coefficients:
+#>                         Estimate Std. Error z value     Pr(z)    
+#> param_r_log10         -0.1052940  0.0095654 -11.008 < 2.2e-16 ***
+#> param_K_log10          5.0054617  0.0109603 456.691 < 2.2e-16 ***
+#> param_sd_log10        -1.3133966  0.0473856 -27.717 < 2.2e-16 ***
+#> param_n_initial_log10  3.0287312  0.0238133 127.187 < 2.2e-16 ***
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#> 
+#> -2 log L: -134.8429
+```
+
+Back-transforming the parameters reveals that the fit ist quite good:
+
+``` r
+# growth rate simulated value (0.8) is well-matched by fit:
+10^bbmle::summary(fit_lnorm)@coef[1]
+#> [1] 0.7847042
+
+# carrying capacity simulated value (100000) is well-matched by fit:
+10^bbmle::summary(fit_lnorm)@coef[2]
+#> [1] 101265.6
+
+# standard distribution of data (0.05) is well-matched by fit:
+10^bbmle::summary(fit_lnorm)@coef[3]
+#> [1] 0.04859633
+
+# initial start value of data (1000) is well-matched by fit:
+10^bbmle::summary(fit_lnorm)@coef[4]
+#> [1] 1068.393
+```
+
+Let us plot the data with the regression line (black line) and a line
+representing a simulation in which the researcher would not have
+disturbed the system (red dashed line):
+
+<img src="man/figures/README-plot_log_growth_pulsed_fit-1.png" width="100%" />
+
+You can find the code either in the according help-file or the
+README.rmd.
 
 ## Funding Information
 
