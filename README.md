@@ -45,15 +45,56 @@ and Becks 2024).
 Please note that this package is under development, and we will also add
 more information to the README in the future.
 
+## License
+
+This package is published under the [**GNU General Public License
+3**](https://www.gnu.org/licenses/gpl-3.0.html).
+
+## How to cite
+
+If you use this R-package, please cite it:
+
+Rall, B.C. (2025): dynasymfitr: Fitting dynamic simulated ecological
+population models to laboratory data. Zenodo.
+<https://doi.org/10.5281/zenodo.15856656>.
+
+Please cite also the underlying method:
+
+Rosenbaum, B. and Rall, B.C. (2018): Fitting Functional Responses:
+Direct parameter estimation by simulating differential equations.
+Methods in Ecology and Evolution 9 (10): 2076–90.
+<https://doi.org/10.1111/2041-210X.13039>.
+
+### Cite specific versions:
+
+Rall, B.C. (2025): dynasymfitr: Fitting dynamic simulated ecological
+population models to laboratory data (v0.0.0.9000). Zenodo.
+<https://doi.org/10.5281/zenodo.15856657>.
+
 ## Installation
 
-You can install the development version of dynasymfitr from
+### Install current development version
+
+You can install the latest development version of dynasymfitr from
 [GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("pak")
-pak::pak("b-c-r/dynasymfitr")
+# install.packages("devtools")
+devtools::install_github("b-c-r/dynasymfitr@*release") # current release
 ```
+
+### Install specific versions:
+
+I f you want to install a former version, you may add the specific
+version number, e.g. like:
+
+``` r
+devtools::install_github("b-c-r/dynasymfitr@v0.0.0.9000") # version 0.0.0.9000 (initial release)
+```
+
+But see [this
+thread](https://stackoverflow.com/questions/40179493/r-how-can-i-install-a-specific-release-by-install-github)
+how to install specific version and even specific commits.
 
 ## Examples
 

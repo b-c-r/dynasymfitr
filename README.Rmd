@@ -18,24 +18,53 @@ knitr::opts_chunk$set(
 ## Overview
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 The goal of `dynasymfitr` is to provide a set of functions to analyze laboratory species interaction experiments in a way that the parameter estimates can be seamlessly integrated into theoretical/computational eco-evo projects. `dynasymfitr` will be developed within the DFG-funded research unit 5726, [DynaSym](https://www.dynasym.uni-konstanz.de/), but is not limited to it.
 
-Estimating density-dependent species interactions is not trivial. The possibly most prominent example is the density-dependent feeding rate, also known as functional response [@Holling1959CharacteristicsSimpleTypes]. Feeding is a temporal process, which requires that the functional response model be modeled as a differential equation describing the decay of the resource over time [@RosenbaumRall2018FittingFunctionalResponses]. While a so-called analytical solution exists for the classical hyperbolic type II functional response [@Royama1971ComparativeStudyModels; @Rogers1972RandomSearchInsect; @Bolker2008EcologicalModelsData], the differential equations of other functional response types need to be solved numerically while being fitted to data [@RosenbaumRall2018FittingFunctionalResponses] to avoid biases in the parameter evaluation.
-In addition to the above-mentioned problem, if using small organisms such as algae as resources and ciliates as consumers, even in short-term experiments these critters may grow or decline in population size (i.e., the numerical response) due to death and reproduction. This issue would add even more bias to the estimated parameters. However, by simulating the dynamics of resources and consumers explicitly, these biases can be corrected [@RosenbaumRall2018FittingFunctionalResponses].
-[DynaSym](https://www.dynasym.uni-konstanz.de/) researchers will predominantly work in aquatic planktonic environments to detect the strength and sign of symbiotic species interactions [@BecksEtAl2025EmergentFeedbackSymbiosis]. Therefore, we will not only add models describing species interactions as mentioned above, but also widely used nutrient uptake models [@Tilman1977ResourceCompetitionPlankton; @HuismanWeissing1999BiodiversityPlanktonSpecies; @Brose2008ComplexFoodWebs; @ZhangBecks2024MechanisticRulesSpecies].
+Estimating density-dependent species interactions is not trivial. The possibly most prominent example is the density-dependent feeding rate, also known as functional response [@Holling1959CharacteristicsSimpleTypes]. Feeding is a temporal process, which requires that the functional response model be modeled as a differential equation describing the decay of the resource over time [@RosenbaumRall2018FittingFunctionalResponses]. While a so-called analytical solution exists for the classical hyperbolic type II functional response [@Royama1971ComparativeStudyModels; @Rogers1972RandomSearchInsect; @Bolker2008EcologicalModelsData], the differential equations of other functional response types need to be solved numerically while being fitted to data [@RosenbaumRall2018FittingFunctionalResponses] to avoid biases in the parameter evaluation. In addition to the above-mentioned problem, if using small organisms such as algae as resources and ciliates as consumers, even in short-term experiments these critters may grow or decline in population size (i.e., the numerical response) due to death and reproduction. This issue would add even more bias to the estimated parameters. However, by simulating the dynamics of resources and consumers explicitly, these biases can be corrected [@RosenbaumRall2018FittingFunctionalResponses]. [DynaSym](https://www.dynasym.uni-konstanz.de/) researchers will predominantly work in aquatic planktonic environments to detect the strength and sign of symbiotic species interactions [@BecksEtAl2025EmergentFeedbackSymbiosis]. Therefore, we will not only add models describing species interactions as mentioned above, but also widely used nutrient uptake models [@Tilman1977ResourceCompetitionPlankton; @HuismanWeissing1999BiodiversityPlanktonSpecies; @Brose2008ComplexFoodWebs; @ZhangBecks2024MechanisticRulesSpecies].
 
 Please note that this package is under development, and we will also add more information to the README in the future.
 
+## License
+
+This package is published under the [**GNU General Public License 3**](https://www.gnu.org/licenses/gpl-3.0.html).
+
+## How to cite
+
+If you use this R-package, please cite it:
+
+Rall, B.C. (2025): dynasymfitr: Fitting dynamic simulated ecological population models to laboratory data. Zenodo. <https://doi.org/10.5281/zenodo.15856656>.
+
+Please cite also the underlying method:
+
+Rosenbaum, B. and Rall, B.C. (2018): Fitting Functional Responses: Direct parameter estimation by simulating differential equations. Methods in Ecology and Evolution 9 (10): 2076–90. <https://doi.org/10.1111/2041-210X.13039>.
+
+### Cite specific versions:
+
+Rall, B.C. (2025): dynasymfitr: Fitting dynamic simulated ecological population models to laboratory data (v0.0.0.9000). Zenodo. <https://doi.org/10.5281/zenodo.15856657>.
+
 ## Installation
 
-You can install the development version of dynasymfitr from [GitHub](https://github.com/) with:
+### Install current development version
+
+You can install the latest development version of dynasymfitr from [GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("pak")
-pak::pak("b-c-r/dynasymfitr")
+# install.packages("devtools")
+devtools::install_github("b-c-r/dynasymfitr@*release") # current release
 ```
+
+### Install specific versions:
+
+I f you want to install a former version, you may add the specific version number, e.g. like:
+
+``` r
+devtools::install_github("b-c-r/dynasymfitr@v0.0.0.9000") # version 0.0.0.9000 (initial release)
+```
+
+But see [this thread](https://stackoverflow.com/questions/40179493/r-how-can-i-install-a-specific-release-by-install-github) how to install specific version and even specific commits.
 
 ## Examples
 
@@ -82,7 +111,7 @@ See the summary table:
 bbmle::summary(fit)
 ```
 
-Simulate the best fit: 
+Simulate the best fit:
 
 ```{r}
 out <- simulate_gen_fr(
@@ -110,7 +139,6 @@ lines(
  out[,2]
 )
 ```
-
 
 ## Funding Information
 
