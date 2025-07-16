@@ -93,7 +93,7 @@ out2 <- simulate_logistic_growth_pulsed(
   n_initial = 1000,                      # the initial resource density
   r = .4,                                # the intrinsic growth rate
   K = 10000,                              # the carrying capacity
-  return_all_steps = TRUE,               # all time steps will be returned
+  return_all_steps = TRUE                # all time steps will be returned
 )
 
 # add the in-between steps
@@ -110,7 +110,7 @@ out3 <- simulate_logistic_growth_pulsed(
   n_initial = 1000,                      # the initial resource density
   r = .4,                                # the intrinsic growth rate
   K = 10000,                             # the carrying capacity
-  return_all_steps = TRUE,               # all time steps will be returned
+  return_all_steps = TRUE                # all time steps will be returned
 )
 
 # add the in-between steps
@@ -168,8 +168,8 @@ out2 <- simulate_logistic_growth_pulsed(
   fraction_exchanged = df_in[,2],        # the fraction of media replaced (or the strength of disturbance)
   n_initial = 1000,                      # the initial resource density
   r = .4,                                # the intrinsic growth rate
-  K = 10000,                              # the carrying capacity
-  return_all_steps = TRUE,               # all time steps will be returned
+  K = 10000,                             # the carrying capacity
+  return_all_steps = TRUE                # all time steps will be returned
 )
 
 # add the in-between steps
