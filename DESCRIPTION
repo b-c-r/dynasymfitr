@@ -1,6 +1,6 @@
 Package: dynasymfitr
 Title: Fitting dynamically simulated ecological population models to laboratory data
-Version: 0.0.0.9001
+Version: 0.0.0.9002
 Authors@R: 
     person("Björn C.", "Rall", , "bjoern.rall@uni-konstanz.de", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-3191-8389"))
@@ -38,6 +38,7 @@ Collate:
     'odin.R'
     'simulate_gen_fr.R'
     'scan_gen_fr_parms.R'
+    'simulate_consumer_resource_pulsed.R'
     'simulate_logistic_growth_pulsed.R'
 Depends: 
     R (>= 3.5)

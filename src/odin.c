@@ -5,19 +5,6 @@
 #include <Rinternals.h>
 #include <stdbool.h>
 #include <R_ext/Rdynload.h>
-typedef struct consumer_resource_model_internal {
-  double e;
-  double fmax;
-  double initial_n1;
-  double initial_n2;
-  double K;
-  double m;
-  double n1_initial;
-  double n2_initial;
-  double nhalf;
-  double q;
-  double r;
-} consumer_resource_model_internal;
 typedef struct gen_fr_model_internal {
   double f_max;
   double initial_n;
@@ -32,19 +19,17 @@ typedef struct logistic_growth_model_internal {
   double n_initial;
   double r;
 } logistic_growth_model_internal;
-consumer_resource_model_internal* consumer_resource_model_get_internal(SEXP internal_p, int closed_error);
-static void consumer_resource_model_finalise(SEXP internal_p);
-SEXP consumer_resource_model_create(SEXP user);
-void consumer_resource_model_initmod_desolve(void(* odeparms) (int *, double *));
-SEXP consumer_resource_model_contents(SEXP internal_p);
-SEXP consumer_resource_model_set_user(SEXP internal_p, SEXP user);
-SEXP consumer_resource_model_set_initial(SEXP internal_p, SEXP t_ptr, SEXP state_ptr, SEXP consumer_resource_model_use_dde_ptr);
-SEXP consumer_resource_model_metadata(SEXP internal_p);
-SEXP consumer_resource_model_initial_conditions(SEXP internal_p, SEXP t_ptr);
-void consumer_resource_model_rhs(consumer_resource_model_internal* internal, double t, double * state, double * dstatedt, double * output);
-void consumer_resource_model_rhs_dde(size_t neq, double t, double * state, double * dstatedt, void * internal);
-void consumer_resource_model_rhs_desolve(int * neq, double * t, double * state, double * dstatedt, double * output, int * np);
-SEXP consumer_resource_model_rhs_r(SEXP internal_p, SEXP t, SEXP state);
+typedef struct rma_model_internal {
+  double f_max;
+  double initial_n1;
+  double initial_n2;
+  double K;
+  double m;
+  double n_half;
+  double n1_initial;
+  double n2_initial;
+  double r;
+} rma_model_internal;
 gen_fr_model_internal* gen_fr_model_get_internal(SEXP internal_p, int closed_error);
 static void gen_fr_model_finalise(SEXP internal_p);
 SEXP gen_fr_model_create(SEXP user);
@@ -71,6 +56,19 @@ void logistic_growth_model_rhs(logistic_growth_model_internal* internal, double 
 void logistic_growth_model_rhs_dde(size_t neq, double t, double * state, double * dstatedt, void * internal);
 void logistic_growth_model_rhs_desolve(int * neq, double * t, double * state, double * dstatedt, double * output, int * np);
 SEXP logistic_growth_model_rhs_r(SEXP internal_p, SEXP t, SEXP state);
+rma_model_internal* rma_model_get_internal(SEXP internal_p, int closed_error);
+static void rma_model_finalise(SEXP internal_p);
+SEXP rma_model_create(SEXP user);
+void rma_model_initmod_desolve(void(* odeparms) (int *, double *));
+SEXP rma_model_contents(SEXP internal_p);
+SEXP rma_model_set_user(SEXP internal_p, SEXP user);
+SEXP rma_model_set_initial(SEXP internal_p, SEXP t_ptr, SEXP state_ptr, SEXP rma_model_use_dde_ptr);
+SEXP rma_model_metadata(SEXP internal_p);
+SEXP rma_model_initial_conditions(SEXP internal_p, SEXP t_ptr);
+void rma_model_rhs(rma_model_internal* internal, double t, double * state, double * dstatedt, double * output);
+void rma_model_rhs_dde(size_t neq, double t, double * state, double * dstatedt, void * internal);
+void rma_model_rhs_desolve(int * neq, double * t, double * state, double * dstatedt, double * output, int * np);
+SEXP rma_model_rhs_r(SEXP internal_p, SEXP t, SEXP state);
 double user_get_scalar_double(SEXP user, const char *name,
                               double default_value, double min, double max);
 int user_get_scalar_int(SEXP user, const char *name,
@@ -83,149 +81,6 @@ void user_check_values(SEXP value, double min, double max,
                            const char *name);
 SEXP user_list_element(SEXP list, const char *name);
 double scalar_real(SEXP x, const char * name);
-consumer_resource_model_internal* consumer_resource_model_get_internal(SEXP internal_p, int closed_error) {
-  consumer_resource_model_internal *internal = NULL;
-  if (TYPEOF(internal_p) != EXTPTRSXP) {
-    Rf_error("Expected an external pointer");
-  }
-  internal = (consumer_resource_model_internal*) R_ExternalPtrAddr(internal_p);
-  if (!internal && closed_error) {
-    Rf_error("Pointer has been invalidated");
-  }
-  return internal;
-}
-void consumer_resource_model_finalise(SEXP internal_p) {
-  consumer_resource_model_internal *internal = consumer_resource_model_get_internal(internal_p, 0);
-  if (internal_p) {
-    R_Free(internal);
-    R_ClearExternalPtr(internal_p);
-  }
-}
-SEXP consumer_resource_model_create(SEXP user) {
-  consumer_resource_model_internal *internal = (consumer_resource_model_internal*) R_Calloc(1, consumer_resource_model_internal);
-  internal->e = NA_REAL;
-  internal->fmax = NA_REAL;
-  internal->K = NA_REAL;
-  internal->m = NA_REAL;
-  internal->n1_initial = NA_REAL;
-  internal->n2_initial = NA_REAL;
-  internal->nhalf = NA_REAL;
-  internal->q = NA_REAL;
-  internal->r = NA_REAL;
-  SEXP ptr = PROTECT(R_MakeExternalPtr(internal, R_NilValue, R_NilValue));
-  R_RegisterCFinalizer(ptr, consumer_resource_model_finalise);
-  UNPROTECT(1);
-  return ptr;
-}
-static consumer_resource_model_internal *consumer_resource_model_internal_ds;
-void consumer_resource_model_initmod_desolve(void(* odeparms) (int *, double *)) {
-  static DL_FUNC get_desolve_gparms = NULL;
-  if (get_desolve_gparms == NULL) {
-    get_desolve_gparms =
-      R_GetCCallable("deSolve", "get_deSolve_gparms");
-  }
-  consumer_resource_model_internal_ds = consumer_resource_model_get_internal(get_desolve_gparms(), 1);
-}
-SEXP consumer_resource_model_contents(SEXP internal_p) {
-  consumer_resource_model_internal *internal = consumer_resource_model_get_internal(internal_p, 1);
-  SEXP contents = PROTECT(allocVector(VECSXP, 11));
-  SET_VECTOR_ELT(contents, 0, ScalarReal(internal->e));
-  SET_VECTOR_ELT(contents, 1, ScalarReal(internal->fmax));
-  SET_VECTOR_ELT(contents, 2, ScalarReal(internal->initial_n1));
-  SET_VECTOR_ELT(contents, 3, ScalarReal(internal->initial_n2));
-  SET_VECTOR_ELT(contents, 4, ScalarReal(internal->K));
-  SET_VECTOR_ELT(contents, 5, ScalarReal(internal->m));
-  SET_VECTOR_ELT(contents, 6, ScalarReal(internal->n1_initial));
-  SET_VECTOR_ELT(contents, 7, ScalarReal(internal->n2_initial));
-  SET_VECTOR_ELT(contents, 8, ScalarReal(internal->nhalf));
-  SET_VECTOR_ELT(contents, 9, ScalarReal(internal->q));
-  SET_VECTOR_ELT(contents, 10, ScalarReal(internal->r));
-  SEXP nms = PROTECT(allocVector(STRSXP, 11));
-  SET_STRING_ELT(nms, 0, mkChar("e"));
-  SET_STRING_ELT(nms, 1, mkChar("fmax"));
-  SET_STRING_ELT(nms, 2, mkChar("initial_n1"));
-  SET_STRING_ELT(nms, 3, mkChar("initial_n2"));
-  SET_STRING_ELT(nms, 4, mkChar("K"));
-  SET_STRING_ELT(nms, 5, mkChar("m"));
-  SET_STRING_ELT(nms, 6, mkChar("n1_initial"));
-  SET_STRING_ELT(nms, 7, mkChar("n2_initial"));
-  SET_STRING_ELT(nms, 8, mkChar("nhalf"));
-  SET_STRING_ELT(nms, 9, mkChar("q"));
-  SET_STRING_ELT(nms, 10, mkChar("r"));
-  setAttrib(contents, R_NamesSymbol, nms);
-  UNPROTECT(2);
-  return contents;
-}
-SEXP consumer_resource_model_set_user(SEXP internal_p, SEXP user) {
-  consumer_resource_model_internal *internal = consumer_resource_model_get_internal(internal_p, 1);
-  internal->e = user_get_scalar_double(user, "e", internal->e, NA_REAL, NA_REAL);
-  internal->fmax = user_get_scalar_double(user, "fmax", internal->fmax, NA_REAL, NA_REAL);
-  internal->K = user_get_scalar_double(user, "K", internal->K, NA_REAL, NA_REAL);
-  internal->m = user_get_scalar_double(user, "m", internal->m, NA_REAL, NA_REAL);
-  internal->n1_initial = user_get_scalar_double(user, "n1_initial", internal->n1_initial, NA_REAL, NA_REAL);
-  internal->n2_initial = user_get_scalar_double(user, "n2_initial", internal->n2_initial, NA_REAL, NA_REAL);
-  internal->nhalf = user_get_scalar_double(user, "nhalf", internal->nhalf, NA_REAL, NA_REAL);
-  internal->q = user_get_scalar_double(user, "q", internal->q, NA_REAL, NA_REAL);
-  internal->r = user_get_scalar_double(user, "r", internal->r, NA_REAL, NA_REAL);
-  internal->initial_n1 = internal->n1_initial;
-  internal->initial_n2 = internal->n2_initial;
-  return R_NilValue;
-}
-SEXP consumer_resource_model_set_initial(SEXP internal_p, SEXP t_ptr, SEXP state_ptr, SEXP consumer_resource_model_use_dde_ptr) {
-  return R_NilValue;
-}
-SEXP consumer_resource_model_metadata(SEXP internal_p) {
-  consumer_resource_model_internal *internal = consumer_resource_model_get_internal(internal_p, 1);
-  SEXP ret = PROTECT(allocVector(VECSXP, 4));
-  SEXP nms = PROTECT(allocVector(STRSXP, 4));
-  SET_STRING_ELT(nms, 0, mkChar("variable_order"));
-  SET_STRING_ELT(nms, 1, mkChar("output_order"));
-  SET_STRING_ELT(nms, 2, mkChar("n_out"));
-  SET_STRING_ELT(nms, 3, mkChar("interpolate_t"));
-  setAttrib(ret, R_NamesSymbol, nms);
-  SEXP variable_length = PROTECT(allocVector(VECSXP, 2));
-  SEXP variable_names = PROTECT(allocVector(STRSXP, 2));
-  setAttrib(variable_length, R_NamesSymbol, variable_names);
-  SET_VECTOR_ELT(variable_length, 0, R_NilValue);
-  SET_VECTOR_ELT(variable_length, 1, R_NilValue);
-  SET_STRING_ELT(variable_names, 0, mkChar("n1"));
-  SET_STRING_ELT(variable_names, 1, mkChar("n2"));
-  SET_VECTOR_ELT(ret, 0, variable_length);
-  UNPROTECT(2);
-  SET_VECTOR_ELT(ret, 1, R_NilValue);
-  SET_VECTOR_ELT(ret, 2, ScalarInteger(0));
-  UNPROTECT(2);
-  return ret;
-}
-SEXP consumer_resource_model_initial_conditions(SEXP internal_p, SEXP t_ptr) {
-  consumer_resource_model_internal *internal = consumer_resource_model_get_internal(internal_p, 1);
-  SEXP r_state = PROTECT(allocVector(REALSXP, 2));
-  double * state = REAL(r_state);
-  state[0] = internal->initial_n1;
-  state[1] = internal->initial_n2;
-  UNPROTECT(1);
-  return r_state;
-}
-void consumer_resource_model_rhs(consumer_resource_model_internal* internal, double t, double * state, double * dstatedt, double * output) {
-  double n1 = state[0];
-  double n2 = state[1];
-  dstatedt[0] = internal->r * n1 * (1 - n1 / (double) internal->K) - internal->fmax * pow(n1, (1 + internal->q)) / (double) (pow(internal->nhalf, (1 + internal->q)) + pow(n1, (1 + internal->q))) * n2;
-  dstatedt[1] = internal->e * internal->fmax * pow(n1, (1 + internal->q)) / (double) (pow(internal->nhalf, (1 + internal->q)) + pow(n1, (1 + internal->q))) * n2 - internal->m * n2;
-}
-void consumer_resource_model_rhs_dde(size_t neq, double t, double * state, double * dstatedt, void * internal) {
-  consumer_resource_model_rhs((consumer_resource_model_internal*)internal, t, state, dstatedt, NULL);
-}
-void consumer_resource_model_rhs_desolve(int * neq, double * t, double * state, double * dstatedt, double * output, int * np) {
-  consumer_resource_model_rhs(consumer_resource_model_internal_ds, *t, state, dstatedt, output);
-}
-SEXP consumer_resource_model_rhs_r(SEXP internal_p, SEXP t, SEXP state) {
-  SEXP dstatedt = PROTECT(allocVector(REALSXP, LENGTH(state)));
-  consumer_resource_model_internal *internal = consumer_resource_model_get_internal(internal_p, 1);
-  double *output = NULL;
-  consumer_resource_model_rhs(internal, scalar_real(t, "t"), REAL(state), REAL(dstatedt), output);
-  UNPROTECT(1);
-  return dstatedt;
-}
 gen_fr_model_internal* gen_fr_model_get_internal(SEXP internal_p, int closed_error) {
   gen_fr_model_internal *internal = NULL;
   if (TYPEOF(internal_p) != EXTPTRSXP) {
@@ -453,6 +308,141 @@ SEXP logistic_growth_model_rhs_r(SEXP internal_p, SEXP t, SEXP state) {
   logistic_growth_model_internal *internal = logistic_growth_model_get_internal(internal_p, 1);
   double *output = NULL;
   logistic_growth_model_rhs(internal, scalar_real(t, "t"), REAL(state), REAL(dstatedt), output);
+  UNPROTECT(1);
+  return dstatedt;
+}
+rma_model_internal* rma_model_get_internal(SEXP internal_p, int closed_error) {
+  rma_model_internal *internal = NULL;
+  if (TYPEOF(internal_p) != EXTPTRSXP) {
+    Rf_error("Expected an external pointer");
+  }
+  internal = (rma_model_internal*) R_ExternalPtrAddr(internal_p);
+  if (!internal && closed_error) {
+    Rf_error("Pointer has been invalidated");
+  }
+  return internal;
+}
+void rma_model_finalise(SEXP internal_p) {
+  rma_model_internal *internal = rma_model_get_internal(internal_p, 0);
+  if (internal_p) {
+    R_Free(internal);
+    R_ClearExternalPtr(internal_p);
+  }
+}
+SEXP rma_model_create(SEXP user) {
+  rma_model_internal *internal = (rma_model_internal*) R_Calloc(1, rma_model_internal);
+  internal->f_max = NA_REAL;
+  internal->K = NA_REAL;
+  internal->m = NA_REAL;
+  internal->n_half = NA_REAL;
+  internal->n1_initial = NA_REAL;
+  internal->n2_initial = NA_REAL;
+  internal->r = NA_REAL;
+  SEXP ptr = PROTECT(R_MakeExternalPtr(internal, R_NilValue, R_NilValue));
+  R_RegisterCFinalizer(ptr, rma_model_finalise);
+  UNPROTECT(1);
+  return ptr;
+}
+static rma_model_internal *rma_model_internal_ds;
+void rma_model_initmod_desolve(void(* odeparms) (int *, double *)) {
+  static DL_FUNC get_desolve_gparms = NULL;
+  if (get_desolve_gparms == NULL) {
+    get_desolve_gparms =
+      R_GetCCallable("deSolve", "get_deSolve_gparms");
+  }
+  rma_model_internal_ds = rma_model_get_internal(get_desolve_gparms(), 1);
+}
+SEXP rma_model_contents(SEXP internal_p) {
+  rma_model_internal *internal = rma_model_get_internal(internal_p, 1);
+  SEXP contents = PROTECT(allocVector(VECSXP, 9));
+  SET_VECTOR_ELT(contents, 0, ScalarReal(internal->f_max));
+  SET_VECTOR_ELT(contents, 1, ScalarReal(internal->initial_n1));
+  SET_VECTOR_ELT(contents, 2, ScalarReal(internal->initial_n2));
+  SET_VECTOR_ELT(contents, 3, ScalarReal(internal->K));
+  SET_VECTOR_ELT(contents, 4, ScalarReal(internal->m));
+  SET_VECTOR_ELT(contents, 5, ScalarReal(internal->n_half));
+  SET_VECTOR_ELT(contents, 6, ScalarReal(internal->n1_initial));
+  SET_VECTOR_ELT(contents, 7, ScalarReal(internal->n2_initial));
+  SET_VECTOR_ELT(contents, 8, ScalarReal(internal->r));
+  SEXP nms = PROTECT(allocVector(STRSXP, 9));
+  SET_STRING_ELT(nms, 0, mkChar("f_max"));
+  SET_STRING_ELT(nms, 1, mkChar("initial_n1"));
+  SET_STRING_ELT(nms, 2, mkChar("initial_n2"));
+  SET_STRING_ELT(nms, 3, mkChar("K"));
+  SET_STRING_ELT(nms, 4, mkChar("m"));
+  SET_STRING_ELT(nms, 5, mkChar("n_half"));
+  SET_STRING_ELT(nms, 6, mkChar("n1_initial"));
+  SET_STRING_ELT(nms, 7, mkChar("n2_initial"));
+  SET_STRING_ELT(nms, 8, mkChar("r"));
+  setAttrib(contents, R_NamesSymbol, nms);
+  UNPROTECT(2);
+  return contents;
+}
+SEXP rma_model_set_user(SEXP internal_p, SEXP user) {
+  rma_model_internal *internal = rma_model_get_internal(internal_p, 1);
+  internal->f_max = user_get_scalar_double(user, "f_max", internal->f_max, NA_REAL, NA_REAL);
+  internal->K = user_get_scalar_double(user, "K", internal->K, NA_REAL, NA_REAL);
+  internal->m = user_get_scalar_double(user, "m", internal->m, NA_REAL, NA_REAL);
+  internal->n_half = user_get_scalar_double(user, "n_half", internal->n_half, NA_REAL, NA_REAL);
+  internal->n1_initial = user_get_scalar_double(user, "n1_initial", internal->n1_initial, NA_REAL, NA_REAL);
+  internal->n2_initial = user_get_scalar_double(user, "n2_initial", internal->n2_initial, NA_REAL, NA_REAL);
+  internal->r = user_get_scalar_double(user, "r", internal->r, NA_REAL, NA_REAL);
+  internal->initial_n1 = internal->n1_initial;
+  internal->initial_n2 = internal->n2_initial;
+  return R_NilValue;
+}
+SEXP rma_model_set_initial(SEXP internal_p, SEXP t_ptr, SEXP state_ptr, SEXP rma_model_use_dde_ptr) {
+  return R_NilValue;
+}
+SEXP rma_model_metadata(SEXP internal_p) {
+  rma_model_internal *internal = rma_model_get_internal(internal_p, 1);
+  SEXP ret = PROTECT(allocVector(VECSXP, 4));
+  SEXP nms = PROTECT(allocVector(STRSXP, 4));
+  SET_STRING_ELT(nms, 0, mkChar("variable_order"));
+  SET_STRING_ELT(nms, 1, mkChar("output_order"));
+  SET_STRING_ELT(nms, 2, mkChar("n_out"));
+  SET_STRING_ELT(nms, 3, mkChar("interpolate_t"));
+  setAttrib(ret, R_NamesSymbol, nms);
+  SEXP variable_length = PROTECT(allocVector(VECSXP, 2));
+  SEXP variable_names = PROTECT(allocVector(STRSXP, 2));
+  setAttrib(variable_length, R_NamesSymbol, variable_names);
+  SET_VECTOR_ELT(variable_length, 0, R_NilValue);
+  SET_VECTOR_ELT(variable_length, 1, R_NilValue);
+  SET_STRING_ELT(variable_names, 0, mkChar("n1"));
+  SET_STRING_ELT(variable_names, 1, mkChar("n2"));
+  SET_VECTOR_ELT(ret, 0, variable_length);
+  UNPROTECT(2);
+  SET_VECTOR_ELT(ret, 1, R_NilValue);
+  SET_VECTOR_ELT(ret, 2, ScalarInteger(0));
+  UNPROTECT(2);
+  return ret;
+}
+SEXP rma_model_initial_conditions(SEXP internal_p, SEXP t_ptr) {
+  rma_model_internal *internal = rma_model_get_internal(internal_p, 1);
+  SEXP r_state = PROTECT(allocVector(REALSXP, 2));
+  double * state = REAL(r_state);
+  state[0] = internal->initial_n1;
+  state[1] = internal->initial_n2;
+  UNPROTECT(1);
+  return r_state;
+}
+void rma_model_rhs(rma_model_internal* internal, double t, double * state, double * dstatedt, double * output) {
+  double n1 = state[0];
+  double n2 = state[1];
+  dstatedt[0] = internal->r * n1 * (1 - n1 / (double) internal->K) - internal->f_max * n1 / (double) (internal->n_half + n1) * n2;
+  dstatedt[1] = internal->f_max * n1 / (double) (internal->n_half + n1) * n2 - internal->m * n2;
+}
+void rma_model_rhs_dde(size_t neq, double t, double * state, double * dstatedt, void * internal) {
+  rma_model_rhs((rma_model_internal*)internal, t, state, dstatedt, NULL);
+}
+void rma_model_rhs_desolve(int * neq, double * t, double * state, double * dstatedt, double * output, int * np) {
+  rma_model_rhs(rma_model_internal_ds, *t, state, dstatedt, output);
+}
+SEXP rma_model_rhs_r(SEXP internal_p, SEXP t, SEXP state) {
+  SEXP dstatedt = PROTECT(allocVector(REALSXP, LENGTH(state)));
+  rma_model_internal *internal = rma_model_get_internal(internal_p, 1);
+  double *output = NULL;
+  rma_model_rhs(internal, scalar_real(t, "t"), REAL(state), REAL(dstatedt), output);
   UNPROTECT(1);
   return dstatedt;
 }
